@@ -7,7 +7,7 @@ import {
   PLATFORM_ID,
   signal,
 } from '@angular/core';
-import { AppState } from '../models/models/AppState';
+import { AppState } from '../models/AppState';
 
 @Injectable({
   providedIn: 'root',

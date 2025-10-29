@@ -7,7 +7,7 @@ import { SpeedDialModule } from 'primeng/speeddial';
   selector: 'app-dashboard',
   imports: [CommonModule, SpeedDialModule],
   template: `
-    <div class="px-4 py-2 flex flex-col relative pb-15">
+    <div class="px-4 py-2 flex flex-col">
       <div class="tracking-wide font-semibold text-xl text-blue-900">
         Dashboard
       </div>
@@ -118,48 +118,9 @@ import { SpeedDialModule } from 'primeng/speeddial';
           In Progress
         </div>
       </div>
-
-      <div class="absolute bottom-3 right-2">
-        <p-speeddial
-          [model]="items"
-          [radius]="120"
-          type="quarter-circle"
-          direction="up-left"
-          [tooltipOptions]="{ tooltipPosition: 'right' }"
-          [buttonProps]="{ severity: 'info', rounded: true }"
-        />
-      </div>
     </div>
   `,
   styleUrl: './dashboard.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Dashboard implements OnInit {
-  items: MenuItem[] = [];
-
-  ngOnInit() {
-    this.items = [
-      {
-        icon: 'pi pi-pencil',
-        command: () => {},
-      },
-      {
-        icon: 'pi pi-refresh',
-        command: () => {},
-      },
-      {
-        icon: 'pi pi-trash',
-        command: () => {},
-      },
-      {
-        icon: 'pi pi-upload',
-        routerLink: ['/fileupload'],
-      },
-      {
-        icon: 'pi pi-external-link',
-        target: '_blank',
-        url: 'https://angular.dev',
-      },
-    ];
-  }
-}
+export class Dashboard {}

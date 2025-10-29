@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  ApiBaseUrl: 'https://localhost:7135/api',
+  ApiBaseUrl: 'https://192.168.1.77:5000/api',
   RedirectUrl: '',
   AuthServerUrl: '',
 };
