@@ -13,6 +13,7 @@ export interface GridifyQueryExtend {
   Select: string | null;
   OrderBy: string | null;
   Filter: string | null;
+  Includes: string | null;
 }
 
 export interface GridifyQueryStaff {

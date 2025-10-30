@@ -28,16 +28,19 @@ export class QuotationService {
   GetMany(query: GridifyQueryExtend): Observable<PagingContent<QuotationDto>> {
     let params = new HttpParams()
       .set('page', query.Page.toString())
-      .set('page_size', query.PageSize.toString());
+      .set('pageSize', query.PageSize.toString());
 
     if (query.Select) {
-      params = params.set('Select', query.Select);
+      params = params.set('select', query.Select);
     }
     if (query.OrderBy) {
-      params = params.set('OrderBy', query.OrderBy);
+      params = params.set('orderBy', query.OrderBy);
     }
     if (query.Filter) {
-      params = params.set('Filter', query.Filter);
+      params = params.set('filter', query.Filter);
+    }
+    if (query.Includes) {
+      params = params.set('includes', query.Includes);
     }
 
     return this.http

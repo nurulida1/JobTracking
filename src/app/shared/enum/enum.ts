@@ -6,9 +6,9 @@ export enum DeliveryStatus {
 export enum PurchaseOrderStatus {}
 
 export enum QuotationStatus {
-  Pending = 'Pending',
-  Approved = 'Approved',
-  Rejected = 'Rejected',
+  Pending = 0,
+  Approved = 1,
+  Rejected = 2,
 }
 
 export enum UserRole {

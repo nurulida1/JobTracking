@@ -24,7 +24,7 @@ import { MenuItem } from 'primeng/api';
   ],
   template: `
     <div class="relative w-full min-h-screen flex flex-col">
-      <app-navbar class="w-full"></app-navbar>
+      <!-- <app-navbar class="w-full"></app-navbar> -->
 
       <div *ngIf="isMobile" class="flex-1 flex flex-row w-full">
         <div class="flex-1 flex flex-col min-h-full min-w-0">
@@ -63,18 +63,18 @@ import { MenuItem } from 'primeng/api';
         </div>
       </div>
 
-      <div *ngIf="!isMobile" class="flex-1 w-full overflow-auto">
+      <div *ngIf="!isMobile" class="flex-1 w-full overflow-auto bg-gray-100">
         <router-outlet></router-outlet>
       </div>
 
-      <app-footer *ngIf="!isMobile" class="shrink-0"></app-footer>
+      <!-- <app-footer *ngIf="!isMobile" class="shrink-0"></app-footer> -->
     </div>
   `,
   styleUrl: './main-layout.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MainLayoutComponent implements OnInit {
-  isMobile = window.innerWidth < 1280;
+  isMobile = window.innerWidth < 770;
   items: MenuItem[] = [];
 
   @HostListener('window:resize', [])
@@ -83,6 +83,7 @@ export class MainLayoutComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log(this.isMobile);
     this.items = [
       {
         icon: 'pi pi-cog',
