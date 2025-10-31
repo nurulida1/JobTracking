@@ -2,28 +2,29 @@ import { UserRole } from '../shared/enum/enum';
 import { BaseModel } from './BaseModel';
 
 export interface UserDto extends BaseModel {
-  FullName: string;
-  Email: string;
-  Role: UserRole;
-  PhoneNumber: string;
-  IsActive: boolean;
-  Password: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  phoneNumber: string;
+  isActive: boolean;
+  password: string;
 }
 
 export interface LoginRequest {
-  Email: string;
-  Password: string;
+  email: string;
+  password: string;
 }
 
 export interface ChangePasswordRequest {
-  CurrentPassword: string;
-  NewPassword: string;
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface RegisterRequest {
-  FullName: string;
-  Email: string;
-  Password: string;
-  PhoneNumber: string;
-  Role?: UserRole;
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  phoneNumber?: string;
+  role?: UserRole;
 }

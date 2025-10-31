@@ -1,9 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { SpeedDialModule } from 'primeng/speeddial';
 import { TooltipModule } from 'primeng/tooltip';
 import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
+import { SidebarComponent } from '../../shared/components/sidebar/sidebar.component';
+import { LoadingService } from '../../services/loading.service';
+import { AppService } from '../../services/appService.service';
+import { DashboardCount } from '../../models/AppModels';
+import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { ChartModule } from 'primeng/chart';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,149 +24,40 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
     SpeedDialModule,
     TooltipModule,
     QuotationRoutingModule,
+    SidebarComponent,
+    ChartModule,
   ],
   template: `
     <div
-      class="relative w-full min-h-screen bg-cover bg-center flex items-center justify-center"
+      class="relative w-full min-h-screen bg-cover bg-center flex items-center justify-center pb-20 2xl:pt-2 2xl:pb-2"
       style="background-image: url('assets/background.png');"
     >
       <div class="absolute inset-0 backdrop-blur-sm bg-black/40 z-10"></div>
       <div
-        class="relative z-20 border border-gray-400/30 p-4 rounded-3xl bg-black/20 
+        class="relative z-20 border border-gray-400/30 p-4 2xl:rounded-3xl bg-black/20 
           w-[98%] min-h-[98vh] shadow-xl
           shadow-[0_0_40px_rgba(173,216,230,0.5)] text-white backdrop-filter backdrop-blur-xl
           flex flex-col"
       >
-        <div class="text-lg font-semibold tracking-widest mb-2 text-shadow-lg">
-          YL Systems
-        </div>
-        <div class="flex flex-row w-full">
+        <div
+          class="text-lg font-semibold tracking-widest mb-2 py-5 text-shadow-lg"
+        ></div>
+        <div
+          class="w-full"
+          [ngClass]="{
+            'flex flex-row border': !isMobile,
+            'flex flex-col': isMobile
+          }"
+        >
           <div
-            class="w-[5%] p-4 border-r border-gray-700/50 flex flex-col items-center"
+            *ngIf="!isMobile"
+            class="w-[7%] 3xl:w-[5%] p-4 border-r border-gray-700/50 flex flex-col items-center"
           >
-            <div class="space-y-6 w-full">
-              <a
-                href="#"
-                class="flex items-center space-x-3 p-3 rounded-xl bg-blue-600/60 shadow-lg transition duration-200"
-                pTooltip="Home"
-                tooltipPosition="right"
-              >
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-10v10a1 1 0 001 1h3m-6 0a1 1 0 001-1v-4a1 1 0 00-1-1h-2a1 1 0 00-1 1v4a1 1 0 001 1z"
-                  ></path>
-                </svg>
-              </a>
-              <a
-                [routerLink]="'/quotation'"
-                class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-                pTooltip="Quotations"
-                tooltipPosition="right"
-              >
-                <svg
-                  class="w-6 h-6"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z"
-                  />
-                </svg>
-              </a>
-              <a
-                href="#"
-                class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-                pTooltip="Purchase Order"
-                tooltipPosition="right"
-              >
-                <svg
-                  class="w-6 h-6"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 8h6m-6 4h6m-6 4h6M6 3v18l2-2 2 2 2-2 2 2 2-2 2 2V3l-2 2-2-2-2 2-2-2-2 2-2-2Z"
-                  />
-                </svg>
-              </a>
-              <a
-                href="#"
-                class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-                pTooltip="Jobs"
-                tooltipPosition="right"
-              >
-                <svg
-                  class="w-6 h-6 "
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7H5a2 2 0 0 0-2 2v4m5-6h8M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m0 0h3a2 2 0 0 1 2 2v4m0 0v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6m18 0s-4 2-9 2-9-2-9-2m9-2h.01"
-                  />
-                </svg>
-              </a>
-              <a
-                href="#"
-                class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-                pTooltip="Delivery"
-                tooltipPosition="right"
-              >
-                <svg
-                  class="w-6 h-6"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7h6l2 4m-8-4v8H9m4-8V6c0-.26522-.1054-.51957-.2929-.70711C12.5196 5.10536 12.2652 5 12 5H4c-.26522 0-.51957.10536-.70711.29289C3.10536 5.48043 3 5.73478 3 6v9h2m14 0h2v-4m0 0h-5M8 8.66669V10l1.5 1.5m10 5c0 1.3807-1.1193 2.5-2.5 2.5s-2.5-1.1193-2.5-2.5S15.6193 14 17 14s2.5 1.1193 2.5 2.5Zm-10 0C9.5 17.8807 8.38071 19 7 19s-2.5-1.1193-2.5-2.5S5.61929 14 7 14s2.5 1.1193 2.5 2.5Z"
-                  />
-                </svg>
-              </a>
-            </div>
+            <app-sidebar></app-sidebar>
           </div>
 
-          <div class="w-[75%] p-4 space-y-4">
-            <div class="grid grid-cols-2 gap-4 h-[45%]">
+          <div class="w-full 2xl:w-[75%] p-1 2xl:p-4 space-y-4">
+            <div class="grid 2xl:grid-cols-2 gap-4 h-[45%]">
               <div
                 class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col"
               >
@@ -166,32 +69,32 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                 <div class="flex space-x-4 mb-4">
                   <div class="text-center flex-1 border-r border-white/20">
                     <div
-                      class="text-3xl font-semibold text-white text-shadow-md tracking-widest"
+                      class="text-3xl font-semibold text-yellow-400 text-shadow-md tracking-widest"
                     >
-                      32
-                    </div>
-                    <div class="text-xs text-gray-400 tracking-wider">
-                      Drafts
-                    </div>
-                  </div>
-                  <div class="text-center flex-1 ">
-                    <div
-                      class="text-3xl font-semibold tracking-widest text-yellow-400 text-shadow-md"
-                    >
-                      15
+                      {{ dashboardCount.quotations?.pending }}
                     </div>
                     <div class="text-xs text-gray-400 tracking-wider">
                       Pending Approval
                     </div>
                   </div>
-                  <div class="text-center flex-1 border-l border-white/20">
+                  <div class="text-center flex-1 ">
                     <div
                       class="text-3xl font-semibold tracking-widest text-green-400 text-shadow-md"
                     >
-                      1.5
+                      {{ dashboardCount.quotations?.approved }}
                     </div>
                     <div class="text-xs text-gray-400 tracking-wider">
                       Approved
+                    </div>
+                  </div>
+                  <div class="text-center flex-1 border-l border-white/20">
+                    <div
+                      class="text-3xl font-semibold tracking-widest text-red-400 text-shadow-md"
+                    >
+                      {{ dashboardCount.quotations?.rejected }}
+                    </div>
+                    <div class="text-xs text-gray-400 tracking-wider">
+                      Rejected
                     </div>
                   </div>
                 </div>
@@ -201,7 +104,12 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                 <div
                   class="flex-grow bg-white/5 rounded-lg border border-white/10 p-2 flex items-center justify-center"
                 >
-                  <span class="text-gray-500 text-xs">Chart Placeholder</span>
+                  <p-chart
+                    type="line"
+                    [data]="quotationChartData"
+                    [options]="quotationChartOptions"
+                    style="width: 100%;"
+                  ></p-chart>
                 </div>
               </div>
 
@@ -243,7 +151,9 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                         stroke-dashoffset="-48"
                       />
                     </svg>
-                    <div class="absolute text-3xl font-bold">48</div>
+                    <div class="absolute text-3xl font-bold">
+                      {{ dashboardCount.jobs?.active }}
+                    </div>
                   </div>
                 </div>
                 <div class="flex justify-around w-full mt-2 text-sm">
@@ -263,7 +173,7 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 h-[50%] mt-7">
+            <div class="grid 2xl:grid-cols-2 gap-4 h-[50%] mt-7">
               <div
                 class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col"
               >
@@ -277,7 +187,7 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                     <div
                       class="text-4xl font-semibold tracking-widest text-white text-shadow-lg"
                     >
-                      46
+                      {{ dashboardCount.jobs?.active }}
                     </div>
                     <div class="text-sm text-gray-400">Active Jobs</div>
                   </div>
@@ -285,7 +195,7 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                     <div
                       class="text-4xl font-semibold tracking-widest text-yellow-400 text-shadow"
                     >
-                      13
+                      {{ dashboardCount.jobs?.pending }}
                     </div>
                     <div class="text-sm text-gray-400">Pending</div>
                   </div>
@@ -293,7 +203,7 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                     <div
                       class="text-4xl font-semibold tracking-widest text-red-400 text-shadow"
                     >
-                      12
+                      {{ dashboardCount.jobs?.delayed }}
                     </div>
                     <div class="text-sm text-gray-400">Delayed</div>
                   </div>
@@ -312,6 +222,7 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
                 <div class="border-b border-white/10 mt-2 mb-4"></div>
                 <div class="flex justify-center space-x-4">
                   <button
+                    [routerLink]="'/quotation/form'"
                     class="px-5 py-2 text-sm tracking-wider border-[#40A0AC] border-2 cursor-pointer rounded-md font-semibold transition duration-200 hover:bg-[#317c86]"
                   >
                     Create New Quote
@@ -364,8 +275,10 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
               </div>
             </div>
           </div>
-          <div class="w-[20%] min-h-[90%] p-4">
-            <div class=" h-full p-4 border-l border-white/20 flex flex-col">
+          <div class="w-full 2xl:w-[20%] min-h-[90%] p-4" *ngIf="!isMobile">
+            <div
+              class=" h-full p-4 2xl:border-l 2xl:border-white/20 flex flex-col"
+            >
               <div class="flex flex-row items-center gap-2 mb-2 pl-2">
                 <svg
                   class="w-6 h-6 text-green-400 filter drop-shadow-[0_0_4px_#22c55e] drop-shadow-[0_0_8px_#22c55e]"
@@ -392,30 +305,16 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
               </div>
               <div class="border-b border-white/10 mb-3 "></div>
               <div class="space-y-3 overflow-y-auto pl-2">
-                <div class="border-b border-white/5 pb-2">
-                  <div class="text-sm font-semibold">
-                    Quote #2027 is **Approved**
+                <ng-container *ngFor="let notification of notifications">
+                  <div class="border-b border-white/5 pb-2">
+                    <div class="text-sm font-semibold">
+                      {{ notification.message }}
+                    </div>
+                    <div class="text-xs text-white/30">
+                      {{ notification.time | date : 'dd/MM/yyyy hh:mm:ss a' }}
+                    </div>
                   </div>
-                  <div class="text-xs text-gray-500">2 minutes ago</div>
-                </div>
-                <div class="border-b border-white/5 pb-2">
-                  <div class="text-sm font-semibold">
-                    Job A863 has **Delivery** scheduled
-                  </div>
-                  <div class="text-xs text-gray-500">1 hour ago</div>
-                </div>
-                <div class="border-b border-white/5 pb-2">
-                  <div class="text-sm font-semibold">
-                    **PO #981** requires sign-off
-                  </div>
-                  <div class="text-xs text-gray-500">Yesterday</div>
-                </div>
-                <div class="border-b border-white/5 pb-2">
-                  <div class="text-sm font-semibold">
-                    New **Client** added: Acme Corp
-                  </div>
-                  <div class="text-xs text-gray-500">2 days ago</div>
-                </div>
+                </ng-container>
               </div>
             </div>
           </div>
@@ -426,4 +325,100 @@ import { QuotationRoutingModule } from '../quotation/quotation-rounting.module';
   styleUrl: './dashboard.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Dashboard {}
+export class Dashboard implements OnInit, OnDestroy {
+  isMobile = window.innerWidth < 770;
+
+  private readonly loadingService = inject(LoadingService);
+  private readonly appService = inject(AppService);
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
+  private cdr = inject(ChangeDetectorRef);
+
+  dashboardCount: DashboardCount = {} as DashboardCount;
+  notifications: [{ message: string; time: Date }] | null = null;
+
+  quotationChartData: any;
+  quotationChartOptions: any;
+
+  ngOnInit(): void {
+    const requests: any = {
+      dashboardCount: this.appService.GetDashboardCount(),
+      quotationChart: this.appService.QuotationChart(),
+    };
+
+    if (!this.isMobile) {
+      requests.notifications = this.appService.GetNotifications();
+    }
+
+    forkJoin(requests)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe({
+        next: (res: any) => {
+          this.dashboardCount = res.dashboardCount;
+
+          if (!this.isMobile) {
+            this.notifications = res.notifications;
+          }
+
+          // 🆕 Handle quotation chart data
+          const chartData = res.quotationChart || [];
+          const labels = chartData.map((item: any) =>
+            new Date(item.date).toLocaleDateString('en-MY', {
+              day: '2-digit',
+              month: 'short',
+            })
+          );
+          const data = chartData.map((item: any) => item.count);
+
+          this.quotationChartData = {
+            labels,
+            datasets: [
+              {
+                data,
+                borderColor: '#42A5F5',
+                backgroundColor: 'rgba(66,165,245,0.3)',
+                tension: 0.3,
+                fill: true,
+              },
+            ],
+          };
+
+          this.quotationChartOptions = {
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              x: {
+                ticks: { color: '#A0AEC0' },
+                grid: { color: 'rgba(255,255,255,0.1)' },
+              },
+              y: {
+                ticks: {
+                  color: '#A0AEC0',
+                  precision: 0,
+                  callback: function (value: number) {
+                    return Math.floor(value);
+                  },
+                },
+                grid: { color: 'rgba(255,255,255,0.1)' },
+              },
+            },
+          };
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error(err);
+          this.loadingService.stop();
+        },
+        complete: () => {
+          this.loadingService.stop();
+        },
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+    this.loadingService.stop();
+  }
+}

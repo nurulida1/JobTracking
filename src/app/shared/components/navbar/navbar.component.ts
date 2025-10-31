@@ -24,9 +24,13 @@ import { AppConfigService } from '../../../services/appConfig.service';
     PopoverModule,
     DialogModule,
   ],
-  template: `<div class="shadow-md p-3 w-full bg-blue-900">
+  template: `<div class="py-2 px-2 w-full ">
     <div class="flex flex-row items-center justify-between">
-      <div class="font-semibold tracking-wider text-white">YL Systems</div>
+      <div class="font-semibold tracking-widest text-white">YL Systems</div>
+      <div
+        class="pi pi-bell !text-xl !text-white"
+        [routerLink]="'/notifications'"
+      ></div>
     </div>
   </div>`,
   styleUrl: './navbar.component.less',

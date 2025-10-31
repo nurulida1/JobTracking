@@ -1,5 +1,15 @@
 :host {
   display: block;
+
+  ::ng-deep {
+    .p-dataview-content {
+      background: none !important;
+      border: 1px solid rgba(141, 111, 111, 0.2) !important;
+    }
+    .p-dataview {
+      border: 1px solid rgba(141, 111, 111, 0.2) !important;
+    }
+  }
 }
 :host::ng-deep .p-datatable-thead > tr > th {
   background: none !important;

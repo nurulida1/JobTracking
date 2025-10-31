@@ -115,6 +115,19 @@ export class QuotationService {
       .pipe(retry(1), catchError(this.handleError('Reject')));
   }
 
+  GetDashboardCount(): Observable<{
+    pending: number;
+    approved: number;
+    rejected: number;
+  }> {
+    return this.http
+      .get<{ pending: number; approved: number; rejected: number }>(
+        this.url + '/DashboardCount',
+        {}
+      )
+      .pipe(retry(1), catchError(this.handleError('GetDashboardCount')));
+  }
+
   private handleError = (context: string) => (error: any) => {
     this.messageService.add({
       severity: 'error',

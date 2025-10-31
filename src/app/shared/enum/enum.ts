@@ -15,6 +15,7 @@ export enum UserRole {
   Admin = 'Admin',
   Approver = 'Approver',
   Technician = 'Technician',
+  Guest = 'Guest',
 }
 
 export enum WorkOrderStatus {

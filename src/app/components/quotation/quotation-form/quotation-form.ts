@@ -1,10 +1,43 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+} from '@angular/core';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { QuotationService } from '../../../services/quotationService.service';
+import { DatePickerModule } from 'primeng/datepicker';
+import { FileUploadModule } from 'primeng/fileupload';
+import { TextareaModule } from 'primeng/textarea';
+import { Divider, DividerModule } from 'primeng/divider';
+import { MessageService } from 'primeng/api';
+import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
+import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-quotation-form',
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    ReactiveFormsModule,
+    InputTextModule,
+    InputNumberModule,
+    DatePickerModule,
+    FileUploadModule,
+    TextareaModule,
+    DividerModule,
+    SidebarComponent,
+  ],
   template: ` <div
     class="relative w-full min-h-screen bg-cover bg-center flex items-center justify-center"
     style="background-image: url('assets/background.png');"
@@ -16,392 +49,276 @@ import { RouterLink } from '@angular/router';
           shadow-[0_0_40px_rgba(173,216,230,0.5)] text-white backdrop-filter backdrop-blur-xl
           flex flex-col"
     >
-      <div class="text-lg font-semibold tracking-widest mb-2 text-shadow-lg">
-        YL Systems
-      </div>
+      <div
+        class="text-lg font-semibold tracking-widest mb-2 text-shadow-lg"
+      ></div>
       <div class="flex flex-row w-full">
-        <div
-          class="w-[5%] p-4 border-r border-gray-700/50 flex flex-col items-center"
-        >
-          <div class="space-y-6 w-full">
-            <a
-              href="#"
-              class="flex items-center space-x-3 p-3 rounded-xl bg-blue-600/60 shadow-lg transition duration-200"
-              pTooltip="Home"
-              tooltipPosition="right"
-            >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-10v10a1 1 0 001 1h3m-6 0a1 1 0 001-1v-4a1 1 0 00-1-1h-2a1 1 0 00-1 1v4a1 1 0 001 1z"
-                ></path>
-              </svg>
-            </a>
-            <a
-              [routerLink]="'/quotation'"
-              class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-              pTooltip="Quotations"
-              tooltipPosition="right"
-            >
-              <svg
-                class="w-6 h-6"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z"
-                />
-              </svg>
-            </a>
-            <a
-              href="#"
-              class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-              pTooltip="Purchase Order"
-              tooltipPosition="right"
-            >
-              <svg
-                class="w-6 h-6"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 8h6m-6 4h6m-6 4h6M6 3v18l2-2 2 2 2-2 2 2 2-2 2 2V3l-2 2-2-2-2 2-2-2-2 2-2-2Z"
-                />
-              </svg>
-            </a>
-            <a
-              href="#"
-              class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-              pTooltip="Jobs"
-              tooltipPosition="right"
-            >
-              <svg
-                class="w-6 h-6 "
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7H5a2 2 0 0 0-2 2v4m5-6h8M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m0 0h3a2 2 0 0 1 2 2v4m0 0v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6m18 0s-4 2-9 2-9-2-9-2m9-2h.01"
-                />
-              </svg>
-            </a>
-            <a
-              href="#"
-              class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition duration-200 text-gray-400"
-              pTooltip="Delivery"
-              tooltipPosition="right"
-            >
-              <svg
-                class="w-6 h-6"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 7h6l2 4m-8-4v8H9m4-8V6c0-.26522-.1054-.51957-.2929-.70711C12.5196 5.10536 12.2652 5 12 5H4c-.26522 0-.51957.10536-.70711.29289C3.10536 5.48043 3 5.73478 3 6v9h2m14 0h2v-4m0 0h-5M8 8.66669V10l1.5 1.5m10 5c0 1.3807-1.1193 2.5-2.5 2.5s-2.5-1.1193-2.5-2.5S15.6193 14 17 14s2.5 1.1193 2.5 2.5Zm-10 0C9.5 17.8807 8.38071 19 7 19s-2.5-1.1193-2.5-2.5S5.61929 14 7 14s2.5 1.1193 2.5 2.5Z"
-                />
-              </svg>
-            </a>
-          </div>
-        </div>
+        <app-sidebar *ngIf="!isMobile"></app-sidebar>
 
-        <div class="w-[65%] p-4 space-y-4">
-          <div class="grid grid-cols-2 gap-4 h-[45%]">
+        <div class="w-full">
+          <div class="h-[90%] pb-20 pt-12">
             <div
               class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col"
             >
               <h3
                 class="text-lg font-semibold mb-3 text-blue-400 tracking-wider"
               >
-                Quotations
+                Add New Quotation
               </h3>
-              <div class="flex space-x-4 mb-4">
-                <div class="text-center flex-1 border-r border-white/20">
-                  <div
-                    class="text-3xl font-semibold text-white text-shadow-md tracking-widest"
-                  >
-                    32
-                  </div>
-                  <div class="text-xs text-gray-400 tracking-wider">Drafts</div>
-                </div>
-                <div class="text-center flex-1 ">
-                  <div
-                    class="text-3xl font-semibold tracking-widest text-yellow-400 text-shadow-md"
-                  >
-                    15
-                  </div>
-                  <div class="text-xs text-gray-400 tracking-wider">
-                    Pending Approval
-                  </div>
-                </div>
-                <div class="text-center flex-1 border-l border-white/20">
-                  <div
-                    class="text-3xl font-semibold tracking-widest text-green-400 text-shadow-md"
-                  >
-                    1.5
-                  </div>
-                  <div class="text-xs text-gray-400 tracking-wider">
-                    Approved
-                  </div>
-                </div>
-              </div>
-              <div class="text-sm text-gray-400 mb-2">
-                Quotes Generated This Month
-              </div>
-              <div
-                class="flex-grow bg-white/5 rounded-lg border border-white/10 p-2 flex items-center justify-center"
-              >
-                <span class="text-gray-500 text-xs">Chart Placeholder</span>
-              </div>
-            </div>
 
-            <div
-              class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col items-center"
-            >
-              <h3 class="text-lg font-semibold mb-3 text-pink-400">
-                Job Tracking
-              </h3>
-              <div class="flex items-center justify-center w-full h-full">
+              <div class="mb-2 font-medium tracking-wide text-sm/6">
+                Upload Quotation PDF
+              </div>
+              <div>
+                <p-fileupload
+                  [multiple]="true"
+                  accept="image/*"
+                  maxFileSize="1000000"
+                  styleClass="!bg-white/10 !border-none"
+                >
+                  <ng-template
+                    #header
+                    let-files
+                    let-chooseCallback="chooseCallback"
+                    let-clearCallback="clearCallback"
+                    let-uploadCallback="uploadCallback"
+                  >
+                  </ng-template>
+                  <ng-template
+                    #content
+                    let-files
+                    let-uploadedFiles="uploadedFiles"
+                    let-removeFileCallback="removeFileCallback"
+                    let-removeUploadedFileCallback="removeUploadedFileCallback"
+                  >
+                    <div class="flex flex-col gap-8">
+                      <div *ngIf="files?.length > 0">
+                        <div class="flex flex-wrap gap-4">
+                          <div
+                            *ngFor="let file of files; let i = index"
+                            class="p-8 rounded-border flex flex-col items-center gap-4"
+                          >
+                            <div>
+                              <img
+                                role="presentation"
+                                [alt]="file.name"
+                                [src]="file.objectURL"
+                                width="100"
+                                height="50"
+                              />
+                            </div>
+                            <span
+                              class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden"
+                              >{{ file.name }}</span
+                            >
+                            <p-button
+                              icon="pi pi-times"
+                              [outlined]="true"
+                              [rounded]="true"
+                              severity="danger"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div *ngIf="uploadedFiles?.length > 0">
+                        <div class="flex flex-wrap gap-4">
+                          <div
+                            *ngFor="let file of uploadedFiles; let i = index"
+                            class="m-0 px-12 flex flex-col items-center gap-4"
+                          >
+                            <div>
+                              <img
+                                role="presentation"
+                                [alt]="file.name"
+                                [src]="file.objectURL"
+                                width="100"
+                                height="50"
+                              />
+                            </div>
+                            <span
+                              class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden"
+                              >{{ file.name }}</span
+                            >
+
+                            <p-button
+                              icon="pi pi-times"
+                              [outlined]="true"
+                              [rounded]="true"
+                              severity="danger"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ng-template>
+                  <ng-template #file></ng-template>
+                  <ng-template #empty>
+                    <div
+                      class="flex items-center justify-center flex-col text-white"
+                    >
+                      <p-button
+                        label="Upload File"
+                        icon="pi pi-upload"
+                        styleClass="!text-sm [&_.p-button-icon]:!text-xs !tracking-wider"
+                        (onClick)="fileInput.click()"
+                      ></p-button>
+
+                      <input
+                        type="file"
+                        #fileInput
+                        accept="application/pdf"
+                        hidden
+                        (change)="onFileSelected($event)"
+                      />
+
+                      <div class="flex items-center w-full mt-3">
+                        <div class="flex-grow border-t border-white/30"></div>
+                        <span
+                          class="mx-4 text-sm tracking-wider font-thin text-white"
+                          >OR</span
+                        >
+                        <div class="flex-grow border-t border-white/30"></div>
+                      </div>
+
+                      <p class="mt-2 text-center text-xs tracking-wider mb-5">
+                        Drag and drop quotation file to here to upload.
+                      </p>
+                    </div>
+                  </ng-template>
+                </p-fileupload>
+              </div>
+              <div class="mt-4 flex justify-center mb-3">
+                <p-button
+                  label="Auto Read from PDF"
+                  icon="pi pi-file-import"
+                  styleClass="px-5 !text-xs !tracking-wider [&_.p-button-icon]:!text-sm"
+                ></p-button>
+              </div>
+              <div class="flex items-center gap-2 my-2">
+                <div class="flex-1 border-t border-gray-300"></div>
+                <div class="px-3 text-sm text-white/80">Or Add Manually</div>
+                <div class="flex-1 border-t border-gray-300"></div>
+              </div>
+
+              <div [formGroup]="FG">
                 <div
-                  class="relative w-40 h-40 flex items-center justify-center"
+                  class="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-6"
                 >
-                  <svg viewBox="0 0 36 36" class="absolute w-full h-full">
-                    <path
-                      class="text-gray-700"
-                      fill="none"
-                      stroke="currentColor"
-                      d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831"
-                      stroke-width="4"
-                      stroke-dasharray="100, 100"
-                    />
-                    <path
-                      class="text-cyan-500"
-                      fill="none"
-                      stroke="currentColor"
-                      d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831"
-                      stroke-width="4"
-                      stroke-dasharray="48, 100"
-                      stroke-dashoffset="0"
-                    />
-                    <path
-                      class="text-fuchsia-500"
-                      fill="none"
-                      stroke="currentColor"
-                      d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831"
-                      stroke-width="4"
-                      stroke-dasharray="12, 100"
-                      stroke-dashoffset="-48"
-                    />
-                  </svg>
-                  <div class="absolute text-3xl font-bold">48</div>
-                </div>
-              </div>
-              <div class="flex justify-around w-full mt-2 text-sm">
-                <div class="text-center">
-                  <div
-                    class="w-2 h-2 rounded-full bg-cyan-500 inline-block mr-1"
-                  ></div>
-                  <span class="text-gray-400">Active Jobs</span>
-                </div>
-                <div class="text-center">
-                  <div
-                    class="w-2 h-2 rounded-full bg-fuchsia-500 inline-block mr-1"
-                  ></div>
-                  <span class="text-gray-400">Delayed Jobs</span>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <div class="col-span-6 sm:col-span-3">
+                    <label
+                      for="first-name"
+                      class="tracking-wider block text-sm/6 font-medium text-white"
+                      >Quotation No <span class="text-red-500">*</span></label
+                    >
+                    <div class="mt-2">
+                      <input
+                        id="first-name"
+                        type="text"
+                        formControlName="quotationNo"
+                        name="first-name"
+                        autocomplete="given-name"
+                        class="block w-full rounded-md bg-white/20 px-3 py-1.5 text-base text-white placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      />
+                    </div>
+                  </div>
 
-          <div class="grid grid-cols-2 gap-4 h-[50%] mt-7">
-            <div
-              class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col"
-            >
-              <h3
-                class="text-lg font-semibold text-shadow-lg mb-3 text-cyan-400"
-              >
-                Job Tracking
-              </h3>
-              <div class="flex space-x-8 mb-4">
-                <div class="text-center flex-1 border-r border-white/20">
-                  <div
-                    class="text-4xl font-semibold tracking-widest text-white text-shadow-lg"
-                  >
-                    46
+                  <div class="col-span-6 sm:col-span-3">
+                    <label
+                      for="last-name"
+                      class="tracking-wider block text-sm/6 font-medium text-white"
+                      >Vendor Name</label
+                    >
+                    <div class="mt-2">
+                      <input
+                        id="last-name"
+                        type="text"
+                        name="last-name"
+                        formControlName="vendorName"
+                        autocomplete="family-name"
+                        class="block w-full rounded-md bg-white/20 px-3 py-1.5 text-base tetx-white placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      />
+                    </div>
                   </div>
-                  <div class="text-sm text-gray-400">Active Jobs</div>
-                </div>
-                <div class="text-center flex-1">
-                  <div
-                    class="text-4xl font-semibold tracking-widest text-yellow-400 text-shadow"
-                  >
-                    13
-                  </div>
-                  <div class="text-sm text-gray-400">Pending</div>
-                </div>
-                <div class="text-center flex-1 border-l border-white/20">
-                  <div
-                    class="text-4xl font-semibold tracking-widest text-red-400 text-shadow"
-                  >
-                    12
-                  </div>
-                  <div class="text-sm text-gray-400">Delayed</div>
-                </div>
-              </div>
-              <div class="p-2">
-                <div class="text-sm text-gray-200 tracking-wider">
-                  Latest Job
-                </div>
-                <div class="mt-2 flex flex-row items-center gap-2">
-                  <i class="pi pi-circle-on !text-[5px]"></i>
-                  <div class="text-xs text-gray-200 tracking-wider">
-                    Job 1 in progress
-                  </div>
-                </div>
-              </div>
-              <div class="border-b border-white/10 mt-2 mb-4"></div>
-              <div class="flex justify-center space-x-4">
-                <button
-                  class="px-5 py-2 text-sm tracking-wider border-[#40A0AC] border-2 cursor-pointer rounded-md font-semibold transition duration-200 hover:bg-[#317c86]"
-                >
-                  Create New Quote
-                </button>
-                <button
-                  class="cursor-pointer px-5 py-3 text-sm tracking-wider bg-white/20 hover:bg-gray-700 rounded-md font-semibold transition duration-200"
-                >
-                  View Reports
-                </button>
-              </div>
-            </div>
 
-            <div
-              class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col"
-            >
-              <h3
-                class="text-lg font-semibold mb-3 text-shadow-lg text-yellow-400"
-              >
-                Work Orders (WO)
-              </h3>
-              <div class="flex justify-between mb-4">
-                <div>
-                  <div
-                    class="text-2xl font-semibold tracking-widest text-white"
-                  >
-                    323.95
+                  <div class="col-span-6 sm:col-span-3">
+                    <label
+                      for="last-name"
+                      class="tracking-wider block text-sm/6 font-medium text-white"
+                      >Received Date</label
+                    >
+                    <div class="mt-2">
+                      <p-datepicker
+                        formControlName="receivedDate"
+                        showIcon="true"
+                        class="w-full"
+                        styleClass="!w-full"
+                        appendTo="body"
+                        dateFormat="dd/mm/yy"
+                        inputStyleClass="!w-full !border-none !rounded-l-md !bg-white/20 !px-3 !py-1.5 !text-base !text-white placeholder:!text-gray-400 focus:!outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:!text-sm/6"
+                      ></p-datepicker>
+                    </div>
                   </div>
-                  <div class="text-sm text-gray-400">Personnel Working ($)</div>
-                </div>
-                <div>
-                  <div
-                    class="text-2xl font-semibold tracking-widest text-white"
-                  >
-                    18,903.38
+
+                  <div class="col-span-6 sm:col-span-3">
+                    <label
+                      for="last-name"
+                      class="tracking-wider block text-sm/6 font-medium text-white"
+                      >Amount <span class="text-red-500">*</span></label
+                    >
+                    <div class="mt-2">
+                      <p-inputnumber
+                        formControlName="quotationAmount"
+                        class="w-full"
+                        styleClass="!w-full"
+                        mode="decimal"
+                        [minFractionDigits]="2"
+                        [maxFractionDigits]="2"
+                        mode="currency"
+                        inputId="currency-malaysia"
+                        currency="MYR"
+                        currencyDisplay="code"
+                        locale="ms-MY"
+                        inputStyleClass="!w-full !border-none !rounded-l-md !bg-white/20 !px-3 !py-1.5 !text-base !text-white placeholder:!text-gray-400 focus:!outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:!text-sm/6"
+                      ></p-inputnumber>
+                    </div>
                   </div>
-                  <div class="text-sm text-gray-400">
-                    Total Material Cost ($)
+
+                  <div class="col-span-6 sm:col-span-3">
+                    <label
+                      for="last-name"
+                      class="tracking-wider block text-sm/6 font-medium text-white"
+                      >Remark
+                      <span class="italic !font-thin text-xs"
+                        >(optional)</span
+                      ></label
+                    >
+                    <div class="mt-2">
+                      <textarea
+                        rows="5"
+                        cols="30"
+                        formControlName="remarks"
+                        class="!w-full !border-none !rounded-l-md !bg-white/20 !px-3 !py-1.5 !text-base !text-white placeholder:!text-gray-400 focus:!outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:!text-sm/6"
+                        pTextarea
+                        [autoResize]="true"
+                      ></textarea>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div
-                class="flex-grow bg-white/5 rounded-lg border border-white/10 p-2 flex items-center justify-center"
-              >
-                <span class="text-gray-500 text-xs"
-                  >Work Order Chart Placeholder</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="w-[30%] min-h-[90%] p-4">
-          <div class=" h-full p-4 border-l border-white/20 flex flex-col">
-            <div class="flex flex-row items-center gap-2 mb-2 pl-2">
-              <svg
-                class="w-6 h-6 text-green-400 filter drop-shadow-[0_0_4px_#22c55e] drop-shadow-[0_0_8px_#22c55e]"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572 1.236-1.26 1.33-2.112h-6.92Z"
-                />
-              </svg>
-              <h3
-                class="text-lg font-semibold text-green-400 tracking-wider text-shadow-lg"
-              >
-                Notifications
-              </h3>
-            </div>
-            <div class="border-b border-white/10 mb-3 "></div>
-            <div class="space-y-3 overflow-y-auto pl-2">
-              <div class="border-b border-white/5 pb-2">
-                <div class="text-sm font-semibold">
-                  Quote #2027 is **Approved**
-                </div>
-                <div class="text-xs text-gray-500">2 minutes ago</div>
-              </div>
-              <div class="border-b border-white/5 pb-2">
-                <div class="text-sm font-semibold">
-                  Job A863 has **Delivery** scheduled
-                </div>
-                <div class="text-xs text-gray-500">1 hour ago</div>
-              </div>
-              <div class="border-b border-white/5 pb-2">
-                <div class="text-sm font-semibold">
-                  **PO #981** requires sign-off
-                </div>
-                <div class="text-xs text-gray-500">Yesterday</div>
-              </div>
-              <div class="border-b border-white/5 pb-2">
-                <div class="text-sm font-semibold">
-                  New **Client** added: Acme Corp
-                </div>
-                <div class="text-xs text-gray-500">2 days ago</div>
+
+              <div class="mt-4 flex flex-row items-center justify-end gap-3">
+                <p-button
+                  (onClick)="CancelClick()"
+                  label="Cancel"
+                  severity="secondary"
+                  styleClass="!text-sm !px-5"
+                ></p-button>
+                <p-button
+                  (onClick)="SubmitClick()"
+                  label="Submit"
+                  severity="info"
+                  styleClass="!text-sm !px-5"
+                ></p-button>
               </div>
             </div>
           </div>
@@ -412,4 +329,59 @@ import { RouterLink } from '@angular/router';
   styleUrl: './quotation-form.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QuotationForm {}
+export class QuotationForm implements OnDestroy {
+  isMobile = window.innerWidth < 770;
+  private readonly quotationService = inject(QuotationService);
+  private readonly messageService = inject(MessageService);
+  private readonly location = inject(Location);
+
+  FG!: FormGroup;
+
+  constructor() {
+    this.FG = new FormGroup({
+      id: new FormControl<string | null>({ value: null, disabled: true }),
+      quotationNo: new FormControl<string | null>(null, Validators.required),
+      vendorName: new FormControl<string | null>(null),
+      receivedDate: new FormControl<Date | null>(new Date()),
+      description: new FormControl<string | null>(null),
+      quotationAmount: new FormControl<number | null>(0),
+      fileUrl: new FormControl<string | null>(null, Validators.required),
+      remarks: new FormControl<string | null>(null),
+    });
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      console.log('Selected file:', file);
+      // TODO: Send file to backend or process it (e.g., read quotation PDF)
+    }
+  }
+
+  CancelClick() {
+    this.location.back();
+  }
+
+  SubmitClick() {
+    if (!this.FG.valid) {
+      return;
+    }
+
+    this.quotationService.Create(this.FG.value).subscribe({
+      next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Successfully Created',
+        });
+      },
+      error: (err) => {},
+      complete: () => {},
+    });
+
+    ValidateAllFormFields(this.FG);
+  }
+
+  ngOnDestroy(): void {}
+}

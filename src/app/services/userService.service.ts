@@ -7,7 +7,16 @@ import {
 } from '../models/UserModel';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
-import { Observable, retry, catchError, of, throwError } from 'rxjs';
+import {
+  Observable,
+  retry,
+  catchError,
+  of,
+  throwError,
+  BehaviorSubject,
+  tap,
+  map,
+} from 'rxjs';
 import { environment } from '../../environments/environment.development';
 import {
   GridifyQueryExtend,
@@ -20,11 +29,21 @@ import {
 })
 export class UserService {
   url = environment.ApiBaseUrl + '/Users';
+  private currentUserSubject = new BehaviorSubject<UserDto | null>(null);
+  currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private messageService: MessageService
   ) {}
+
+  get currentUser(): UserDto | null {
+    return this.currentUserSubject.value;
+  }
+
+  setCurrentUser(user: UserDto | null): void {
+    this.currentUserSubject.next(user);
+  }
 
   GetMany(query: GridifyQueryExtend): Observable<PagingContent<UserDto>> {
     let params = new HttpParams()
@@ -83,15 +102,33 @@ export class UserService {
       .pipe(retry(1), catchError(this.handleError('GetProfile')));
   }
 
-  Login(request: LoginRequest): Observable<UserDto> {
+  Login(
+    request: LoginRequest
+  ): Observable<{ success: boolean; user: UserDto; message?: string }> {
     return this.http
-      .post<UserDto>(`${this.url}/Login`, request) // no { Data: ... }
-      .pipe(retry(1), catchError(this.handleError('Login')));
+      .post<{ success: boolean; user: UserDto; message?: string }>(
+        `${this.url}/Login`,
+        request
+      )
+      .pipe(
+        retry(1),
+        tap((res) => {
+          if (res.success && res.user) {
+            this.setCurrentUser(res.user);
+          }
+        }),
+        catchError(this.handleError('Login'))
+      );
   }
 
-  Register(request: RegisterRequest): Observable<UserDto> {
+  Register(
+    request: RegisterRequest
+  ): Observable<{ success: boolean; user: UserDto; message?: string }> {
     return this.http
-      .post<UserDto>(`${this.url}/Register`, request) // no { Data: ... }
+      .post<{ success: boolean; user: UserDto; message?: string }>(
+        `${this.url}/Register`,
+        request
+      ) // no { Data: ... }
       .pipe(retry(1), catchError(this.handleError('Register')));
   }
 
