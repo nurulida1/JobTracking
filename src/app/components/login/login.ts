@@ -52,7 +52,7 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
     </div>
     <div class="relative h-[80%] flex flex-col w-full p-4 login-fade-in">
       <div
-        class="p-4 rounded-b rounded-full absolute -top-6 left-0 right-0 w-full bg-white rounded z-20 "
+        class="p-4 rounded-b rounded-full absolute -top-6 left-0 right-0 w-full bg-white z-20 "
       ></div>
       <div class="flex flex-col items-start w-full gap-1 ">
         <div class="font-semibold text-3xl tracking-widest pl-2 text-cyan-600">
