@@ -25,6 +25,8 @@ import { MessageService } from 'primeng/api';
 import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { LoadingService } from '../../../services/loading.service';
+import { Subject, takeUntil } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
 
 @Component({
   selector: 'app-quotation-form',
@@ -65,7 +67,7 @@ import { LoadingService } from '../../../services/loading.service';
               <h3
                 class="text-lg font-semibold mb-3 text-blue-400 tracking-wider"
               >
-                Add New Quotation
+                {{ Title }}
               </h3>
 
               <div class="mb-2 font-medium tracking-wide text-sm/6">
@@ -94,61 +96,22 @@ import { LoadingService } from '../../../services/loading.service';
                     let-removeUploadedFileCallback="removeUploadedFileCallback"
                   >
                     <div class="flex flex-col gap-8">
-                      <div *ngIf="files?.length > 0">
-                        <div class="flex flex-wrap gap-4">
+                      <div *ngIf="FG.get('fileUrl')?.value" class="pb-2">
+                        <div
+                          class="px-4 flex flex-row items-center justify-between p-2 bg-black/20 rounded-md shadow-md"
+                        >
                           <div
-                            *ngFor="let file of files; let i = index"
-                            class="p-8 rounded-border flex flex-col items-center gap-4"
+                            class="text-blue-400 cursor-pointer underline text-xs"
+                            (click)="downloadFile(FG.get('fileUrl')?.value)"
                           >
-                            <div>
-                              <img
-                                role="presentation"
-                                [alt]="file.name"
-                                [src]="file.objectURL"
-                                width="100"
-                                height="50"
-                              />
-                            </div>
-                            <span
-                              class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden"
-                              >{{ file.name }}</span
-                            >
-                            <p-button
-                              icon="pi pi-times"
-                              [outlined]="true"
-                              [rounded]="true"
-                              severity="danger"
-                            />
+                            {{
+                              FG.get('fileUrl')?.value.split(
+                                '\\\\quotations\\\\'
+                              )[1]
+                            }}
                           </div>
-                        </div>
-                      </div>
-                      <div *ngIf="uploadedFiles?.length > 0">
-                        <div class="flex flex-wrap gap-4">
-                          <div
-                            *ngFor="let file of uploadedFiles; let i = index"
-                            class="m-0 px-12 flex flex-col items-center gap-4"
-                          >
-                            <div>
-                              <img
-                                role="presentation"
-                                [alt]="file.name"
-                                [src]="file.objectURL"
-                                width="100"
-                                height="50"
-                              />
-                            </div>
-                            <span
-                              class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden"
-                              >{{ file.name }}</span
-                            >
 
-                            <p-button
-                              icon="pi pi-times"
-                              [outlined]="true"
-                              [rounded]="true"
-                              severity="danger"
-                            />
-                          </div>
+                          <div class="pi pi-trash !text-red-500 !text-sm"></div>
                         </div>
                       </div>
                     </div>
@@ -385,9 +348,11 @@ export class QuotationForm implements OnDestroy, OnInit {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   FG!: FormGroup;
   currentId: number | null = null;
+  Title: string = '';
 
   constructor() {
     this.currentId = this.activatedRoute.snapshot.queryParams['id'];
@@ -409,10 +374,39 @@ export class QuotationForm implements OnDestroy, OnInit {
       this.FG.get('id')?.enable();
       this.FG.get('id')?.patchValue(this.currentId);
       this.LoadForm();
+      this.Title = 'Update Quotation';
+    } else {
+      this.Title = 'Add New Quotation';
     }
   }
 
-  LoadForm() {}
+  LoadForm() {
+    this.loadingService.start();
+    this.quotationService
+      .GetOne({
+        Page: 1,
+        PageSize: 1,
+        Select: null,
+        Filter: `Id=${this.currentId}`,
+        OrderBy: null,
+        Includes: null,
+      })
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe({
+        next: (res) => {
+          if (res) {
+            this.FG.patchValue(res);
+            this.FG.get('receivedDate')?.patchValue(new Date(res.receivedDate));
+          }
+        },
+        error: (err) => {
+          this.loadingService.stop();
+        },
+        complete: () => {
+          this.loadingService.stop();
+        },
+      });
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -430,29 +424,77 @@ export class QuotationForm implements OnDestroy, OnInit {
     this.location.back();
   }
 
+  downloadFile(filePath: string) {
+    if (!filePath) return;
+
+    const url = `${environment.ApiBaseUrl.replace(
+      /\/api$/,
+      ''
+    )}/${filePath.replace(/\\\\/g, '/')}`;
+
+    fetch(url)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = url.split('/').pop()!;
+        link.click();
+        window.URL.revokeObjectURL(blobUrl);
+      });
+  }
+
   SubmitClick() {
     if (this.FG.valid) {
       this.loadingService.start();
-      this.quotationService.Create(this.FG.value).subscribe({
-        next: (res) => {
-          this.router.navigate(['/quotation']);
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Successfully Created',
-          });
-        },
-        error: (err) => {
-          this.loadingService.stop();
-        },
-        complete: () => {
-          this.loadingService.stop();
-        },
-      });
-    }
 
-    ValidateAllFormFields(this.FG);
+      if (this.currentId) {
+        // Update existing quotation
+        this.quotationService.Update(this.FG.value).subscribe({
+          next: (res) => {
+            this.router.navigate(['/quotation']);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: `Successfully Updated: #${
+                this.FG.get('quotationNo')?.value
+              }`,
+            });
+          },
+          error: (err) => {
+            this.loadingService.stop();
+          },
+          complete: () => {
+            this.loadingService.stop();
+          },
+        });
+      } else {
+        // Create new quotation
+        this.quotationService.Create(this.FG.value).subscribe({
+          next: (res) => {
+            this.router.navigate(['/quotation']);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Successfully Created',
+            });
+          },
+          error: (err) => {
+            this.loadingService.stop();
+          },
+          complete: () => {
+            this.loadingService.stop();
+          },
+        });
+      }
+    } else {
+      ValidateAllFormFields(this.FG);
+    }
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+    this.loadingService.stop();
+  }
 }
