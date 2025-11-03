@@ -31,6 +31,20 @@ export const routes: Routes = [
       import('./components/login/login').then((m) => m.Login),
   },
   {
+    path: 'confirm-email',
+    loadComponent: () =>
+      import('./components/confirmEmail/confirmEmail').then(
+        (m) => m.ConfirmEmail
+      ),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./components/reset-password/reset-password').then(
+        (m) => m.ResetPassword
+      ),
+  },
+  {
     path: 'register',
     loadComponent: () =>
       import('./components/register/register').then((m) => m.Register),

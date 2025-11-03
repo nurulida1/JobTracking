@@ -132,10 +132,18 @@ export class UserService {
       .pipe(retry(1), catchError(this.handleError('Register')));
   }
 
-  ChangePassword(request: ChangePasswordRequest): Observable<UserDto> {
+  ResetPasswordLink(email: string): Observable<BaseResponse> {
+    const params = new HttpParams().set('Email', email); // Match [FromQuery] Email (case-sensitive)
+
     return this.http
-      .post<UserDto>(`${this.url}/change-password`, request) // no { Data: ... }
-      .pipe(retry(1), catchError(this.handleError('ChangePassword')));
+      .post<BaseResponse>(`${this.url}/ForgotPassword`, {}, { params }) // empty body, params in options
+      .pipe(retry(1), catchError(this.handleError('ResetPasswordLink')));
+  }
+
+  ResetPassword(request: ChangePasswordRequest): Observable<BaseResponse> {
+    return this.http
+      .post<BaseResponse>(`${this.url}/ResetPassword`, request) // no { Data: ... }
+      .pipe(retry(1), catchError(this.handleError('ResetPassword')));
   }
 
   Enable(id: number): Observable<BaseResponse> {
