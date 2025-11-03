@@ -16,9 +16,9 @@ import {
   BuildSortText,
   GridifyQueryExtend,
 } from '../../../shared/helpers/helpers';
-import { Subject, takeUntil } from 'rxjs';
+import { finalize, Subject, takeUntil } from 'rxjs';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { QuotationStatus } from '../../../shared/enum/enum';
@@ -138,7 +138,7 @@ import { DataViewModule } from 'primeng/dataview';
                   type="text"
                   pInputText
                   [(ngModel)]="search"
-                  class="w-full !bg-black/30 !border-none !text-white/80"
+                  class="w-full !bg-black/30 !border-none !text-white/80 placeholder:!text-white/70 !text-sm !tracking-wide"
                   placeholder="Search by quotation no"
                   (keyup)="Search(search)"
                 />
@@ -252,10 +252,9 @@ import { DataViewModule } from 'primeng/dataview';
                         *ngFor="let item of items; let first = first"
                       >
                         <div
-                          class="flex flex-col sm:flex-row sm:items-center p-6 gap-4"
+                          class="flex flex-col sm:flex-row sm:items-center px-6 pt-6 pb-2 gap-4"
                           [ngClass]="{
-                            'border-t border-surface-200 dark:border-surface-700':
-                              !first
+                            'border-t border-white/10': !first
                           }"
                         >
                           <div
@@ -270,7 +269,7 @@ import { DataViewModule } from 'primeng/dataview';
                               <p-tag
                                 [value]="DisplayStatus(item.status)"
                                 [severity]="SeverityStatus(item.status)"
-                                class="absolute -top-3 -right-2 !text-xs dark:!bg-surface-900 !tracking-wider"
+                                class="absolute -top-3 -right-2 !text-xs dark:!bg-surface-900 !tracking-wider !rounded-full !px-4"
                               />
                             </div>
                             <div
@@ -296,8 +295,43 @@ import { DataViewModule } from 'primeng/dataview';
                               </div>
                             </div>
                           </div>
+                          <div
+                            class="border-b border-dashed border-white/20 "
+                          ></div>
+                          <div
+                            class="flex flex-row items-center justify-end gap-3"
+                          >
+                            <i
+                              *ngIf="item.status === QuotationStatus.Pending"
+                              (click)="ActionClick(item.id, 'reject')"
+                              class="pi pi-times-circle !text-sm !text-red-500 !text-shadow-md"
+                            ></i>
+                            <i
+                              *ngIf="item.status === QuotationStatus.Pending"
+                              (click)="ActionClick(item.id, 'approve')"
+                              class="pi pi-check-circle !text-sm !text-green-500 !text-shadow-md"
+                            ></i>
+                            <i
+                              (click)="ActionClick(item.id, 'edit')"
+                              class="pi pi-pencil !text-sm !text-blue-500 !text-shadow-md"
+                            ></i>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                  </ng-template>
+                  <ng-template #emptymessage>
+                    <div class="flex justify-center items-center pt-3">
+                      <img
+                        src="assets/no-results.png"
+                        alt=""
+                        class="w-[50px]"
+                      />
+                    </div>
+                    <div
+                      class="text-sm text-white tracking-wider text-center p-3"
+                    >
+                      No results found
                     </div>
                   </ng-template>
                 </p-dataview>
@@ -318,6 +352,7 @@ export class QuotationView implements OnInit, OnDestroy {
   private readonly loadingService = inject(LoadingService);
   private readonly quotationService = inject(QuotationService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   Query: GridifyQueryExtend = {} as GridifyQueryExtend;
@@ -331,6 +366,7 @@ export class QuotationView implements OnInit, OnDestroy {
     rejected: number;
   } | null = null;
   search: string = '';
+  QuotationStatus = QuotationStatus;
 
   constructor() {
     this.Query.Page = 1;
@@ -460,6 +496,66 @@ export class QuotationView implements OnInit, OnDestroy {
       default:
         return 'danger';
     }
+  }
+
+  ActionClick(id: number, type: string) {
+    if (type === 'edit') {
+      this.router.navigate(['/quotation/form'], { queryParams: { id } });
+      return;
+    }
+
+    this.loadingService.start();
+
+    let action$ =
+      type === 'approve'
+        ? this.quotationService.Approve(id)
+        : this.quotationService.Reject(id);
+
+    action$
+      .pipe(
+        takeUntil(this.ngUnsubscribe),
+        finalize(() => this.loadingService.stop())
+      )
+      .subscribe({
+        next: (res) => {
+          // Update PagingSignal
+          this.PagingSignal.update((state) => {
+            const newData = state.Data.map((item) => {
+              if (item.id === id) {
+                const newStatus =
+                  type === 'approve'
+                    ? QuotationStatus.Approved
+                    : QuotationStatus.Rejected;
+                return { ...item, status: newStatus };
+              }
+              return item;
+            });
+            return { ...state, Data: newData };
+          });
+
+          // Update dashboardCount locally
+          if (this.dashboardCount) {
+            if (type === 'approve') {
+              this.dashboardCount.pending = Math.max(
+                this.dashboardCount.pending - 1,
+                0
+              );
+              this.dashboardCount.approved += 1;
+            } else if (type === 'reject') {
+              this.dashboardCount.pending = Math.max(
+                this.dashboardCount.pending - 1,
+                0
+              );
+              this.dashboardCount.rejected += 1;
+            }
+          }
+
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
   }
 
   ngOnDestroy(): void {

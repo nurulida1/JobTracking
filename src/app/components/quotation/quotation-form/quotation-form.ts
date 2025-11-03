@@ -4,6 +4,7 @@ import {
   Component,
   inject,
   OnDestroy,
+  OnInit,
 } from '@angular/core';
 import {
   FormControl,
@@ -11,7 +12,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -23,6 +24,7 @@ import { Divider, DividerModule } from 'primeng/divider';
 import { MessageService } from 'primeng/api';
 import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
+import { LoadingService } from '../../../services/loading.service';
 
 @Component({
   selector: 'app-quotation-form',
@@ -67,7 +69,7 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
               </h3>
 
               <div class="mb-2 font-medium tracking-wide text-sm/6">
-                Upload Quotation PDF
+                Upload Quotation PDF <span class="text-xs text-red-500">*</span>
               </div>
               <div>
                 <p-fileupload
@@ -219,6 +221,19 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
                         autocomplete="given-name"
                         class="block w-full rounded-md bg-white/20 px-3 py-1.5 text-base text-white placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                       />
+                      <div
+                        *ngIf="
+                          FG.get('quotationNo')?.touched &&
+                          FG.get('quotationNo')?.invalid
+                        "
+                        class="text-red-500 text-xs"
+                      >
+                        <div
+                          *ngIf="FG.get('quotationNo')?.errors?.['required']"
+                        >
+                          Quotation is required.
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -280,6 +295,39 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
                         locale="ms-MY"
                         inputStyleClass="!w-full !border-none !rounded-l-md !bg-white/20 !px-3 !py-1.5 !text-base !text-white placeholder:!text-gray-400 focus:!outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:!text-sm/6"
                       ></p-inputnumber>
+                      <div
+                        *ngIf="
+                          FG.get('quotationAmount')?.touched &&
+                          FG.get('quotationAmount')?.invalid
+                        "
+                        class="text-red-500 text-xs"
+                      >
+                        <div
+                          *ngIf="FG.get('quotationAmount')?.errors?.['required']"
+                        >
+                          Amount is required.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-span-6 sm:col-span-3">
+                    <label
+                      for="last-name"
+                      class="tracking-wider block text-sm/6 font-medium text-white"
+                      >Description
+                      <span class="italic !font-thin text-xs"
+                        >(optional)</span
+                      ></label
+                    >
+                    <div class="mt-2">
+                      <textarea
+                        rows="5"
+                        cols="30"
+                        formControlName="description"
+                        class="!w-full !border-none !rounded-l-md !bg-white/20 !px-3 !py-1.5 !text-base !text-white placeholder:!text-gray-400 focus:!outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:!text-sm/6"
+                        pTextarea
+                        [autoResize]="true"
+                      ></textarea>
                     </div>
                   </div>
 
@@ -329,15 +377,21 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
   styleUrl: './quotation-form.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QuotationForm implements OnDestroy {
+export class QuotationForm implements OnDestroy, OnInit {
   isMobile = window.innerWidth < 770;
   private readonly quotationService = inject(QuotationService);
   private readonly messageService = inject(MessageService);
+  private readonly loadingService = inject(LoadingService);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly location = inject(Location);
 
   FG!: FormGroup;
+  currentId: number | null = null;
 
   constructor() {
+    this.currentId = this.activatedRoute.snapshot.queryParams['id'];
+
     this.FG = new FormGroup({
       id: new FormControl<string | null>({ value: null, disabled: true }),
       quotationNo: new FormControl<string | null>(null, Validators.required),
@@ -350,12 +404,25 @@ export class QuotationForm implements OnDestroy {
     });
   }
 
+  ngOnInit(): void {
+    if (this.currentId) {
+      this.FG.get('id')?.enable();
+      this.FG.get('id')?.patchValue(this.currentId);
+      this.LoadForm();
+    }
+  }
+
+  LoadForm() {}
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      console.log('Selected file:', file);
-      // TODO: Send file to backend or process it (e.g., read quotation PDF)
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.FG.get('fileUrl')?.patchValue(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -364,21 +431,25 @@ export class QuotationForm implements OnDestroy {
   }
 
   SubmitClick() {
-    if (!this.FG.valid) {
-      return;
+    if (this.FG.valid) {
+      this.loadingService.start();
+      this.quotationService.Create(this.FG.value).subscribe({
+        next: (res) => {
+          this.router.navigate(['/quotation']);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Successfully Created',
+          });
+        },
+        error: (err) => {
+          this.loadingService.stop();
+        },
+        complete: () => {
+          this.loadingService.stop();
+        },
+      });
     }
-
-    this.quotationService.Create(this.FG.value).subscribe({
-      next: (res) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Successfully Created',
-        });
-      },
-      error: (err) => {},
-      complete: () => {},
-    });
 
     ValidateAllFormFields(this.FG);
   }

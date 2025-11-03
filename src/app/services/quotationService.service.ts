@@ -102,16 +102,17 @@ export class QuotationService {
   }
 
   Approve(id: number): Observable<BaseResponse> {
-    const params = new HttpParams().append('Id', id);
+    const params = new HttpParams().set('id', id.toString());
     return this.http
-      .put<BaseResponse>(`${this.url}/approve`, params)
+      .put<BaseResponse>(`${this.url}/approve`, null, { params })
       .pipe(retry(1), catchError(this.handleError('Approve')));
   }
 
-  Reject(id: number): Observable<BaseResponse> {
-    const params = new HttpParams().append('Id', id);
+  Reject(id: number, remark?: string): Observable<BaseResponse> {
+    let params = new HttpParams().set('id', id.toString());
+    if (remark) params = params.set('remark', remark);
     return this.http
-      .put<BaseResponse>(`${this.url}/reject`, params)
+      .put<BaseResponse>(`${this.url}/reject`, null, { params })
       .pipe(retry(1), catchError(this.handleError('Reject')));
   }
 
