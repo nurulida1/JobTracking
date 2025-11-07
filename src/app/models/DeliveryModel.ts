@@ -3,22 +3,24 @@ import { BaseModel } from './BaseModel';
 import { PurchaseOrderDto } from './PurchaseOrderModel';
 
 export interface DeliveryDto extends BaseModel {
-  PurchaseOrderId: number;
-  PurchaseOrder: PurchaseOrderDto;
-  DeliveryETA?: Date;
-  DeliveryDate?: Date;
-  Status: DeliveryStatus;
-  ReceivedBy?: string;
-  Remark?: string;
+  recordNo: string;
+  purchaseOrderId: number;
+  purchaseOrder: PurchaseOrderDto;
+  deliveryETA?: Date;
+  deliveryDate?: Date;
+  status: DeliveryStatus;
+  receivedBy?: string;
+  remark?: string;
 }
 
 export interface CreateDeliveryRequest {
-  PurchaseOrderId: number;
-  DeliveryETA?: Date;
-  ReceivedBy: string;
-  Remarks: string;
+  recordNo: string;
+  purchaseOrderId: number;
+  deliveryETA?: Date;
+  receivedBy: string;
+  remarks: string;
 }
 
 export interface UpdateDeliveryRequest extends CreateDeliveryRequest {
-  Id: number;
+  id: number;
 }

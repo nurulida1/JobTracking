@@ -1,12 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { UserService } from '../../../services/userService.service';
+import { UserRole } from '../../enum/enum';
 
 @Component({
   selector: 'app-footer',
   imports: [CommonModule, RouterModule],
   template: `<div
-    class="rounded-2xl border px-5 py-4 flex flex-row justify-between items-center text-gray-500 text-xs lg:text-sm bg-white border-t border-gray-200"
+    class="rounded-2xl border px-5 py-4 flex flex-row items-center text-gray-500 text-xs lg:text-sm bg-white border-t border-gray-200 shadow-md"
+    [ngClass]="role === 'Guest' ? 'justify-evenly' : 'justify-between'"
   >
     <div
       [routerLink]="'/dashboard'"
@@ -18,6 +21,7 @@ import { RouterModule } from '@angular/router';
     </div>
 
     <div
+      *ngIf="role === 'Admin' || role === 'Approver'"
       [routerLink]="'/quotation'"
       routerLinkActive="!text-blue-500"
       class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
@@ -27,6 +31,7 @@ import { RouterModule } from '@angular/router';
     </div>
 
     <div
+      *ngIf="role !== 'Guest'"
       [routerLink]="'/job'"
       routerLinkActive="!text-blue-500"
       class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
@@ -36,6 +41,7 @@ import { RouterModule } from '@angular/router';
     </div>
 
     <div
+      *ngIf="role !== 'Guest'"
       [routerLink]="'/delivery'"
       routerLinkActive="!text-blue-500"
       class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
@@ -56,4 +62,12 @@ import { RouterModule } from '@angular/router';
   styleUrl: './footer.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FooterComponent {}
+export class FooterComponent {
+  private readonly userService = inject(UserService);
+
+  role: UserRole | null = null;
+
+  constructor() {
+    this.role = this.userService.currentUser?.role ?? UserRole.Guest;
+  }
+}

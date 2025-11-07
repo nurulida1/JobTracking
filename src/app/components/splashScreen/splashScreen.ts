@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  HostListener,
   inject,
   OnInit,
   signal,
@@ -12,11 +13,12 @@ import { Router } from '@angular/router';
   selector: 'app-splash-screen',
   imports: [CommonModule],
   template: `<div
-    class="transition-all duration-1000 relative text-white bg-gradient-to-r from-[#285895] via-[#2D75AA] to-[#3090C0] w-full min-h-screen flex flex-col items-center justify-center"
-    [class.slide-up]="isSplashFadingOut()"
+    class="transition-all duration-1000 relative text-white bg-gradient-to-r from-[#285895] via-[#2D75AA] to-[#3090C0] w-full min-h-screen flex flex-col items-center justify-center overflow-hidden"
+    [class.slide-up]="isSplashFadingOut() && isMobile"
+    [class.slide-left]="isSplashFadingOut() && !isMobile"
     [class.hidden]="!isSplashVisible()"
   >
-    <!-- splash screen 30 secs -->
+    <!-- splash screen -->
     <div><img src="assets/logo.png" alt="" class="w-[200px]" /></div>
     <div class="text-shadow-lg font-bold text-4xl tracking-widest">
       YL Works
@@ -24,7 +26,8 @@ import { Router } from '@angular/router';
     <div class="mt-3 tracking-wider text-white/80">
       Quotations. Works. Deliveries
     </div>
-    <!-- login page -->
+
+    <!-- footer section -->
     <div class="absolute bottom-15 left-0 right-0 w-full">
       <div
         class="text-shadow-md flex flex-row items-center justify-center tracking-wider text-sm"
@@ -49,6 +52,7 @@ import { Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SplashScreen implements OnInit {
+  isMobile = window.innerWidth < 770;
   private readonly router = inject(Router);
 
   private SPLASH_DURATION_MS: number = 3000;
@@ -56,6 +60,11 @@ export class SplashScreen implements OnInit {
 
   isSplashVisible = signal(true);
   isSplashFadingOut = signal(false);
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
 
   ngOnInit(): void {
     setTimeout(() => {

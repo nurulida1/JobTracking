@@ -24,3 +24,23 @@ export enum WorkOrderStatus {
   OnHold = 'OnHold',
   Completed = 'Completed',
 }
+
+export enum RoleRequestStatus {
+  Pending = 'Pending',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+}
+
+export enum JobPriority {
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High',
+  Critical = 'Critical',
+}
+
+export enum JobStatus {
+  Pending = 'Pending',
+  Active = 'Active',
+  Delayed = 'Delayed',
+  Completed = 'Completed',
+}

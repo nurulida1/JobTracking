@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -37,25 +38,50 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
   ],
   template: `
     <div
-      class="w-full h-screen items-center justify-center bg-white text-gray-500"
+      class="w-full h-screen flex items-center justify-center bg-white text-gray-500"
+      [ngClass]="{ 'flex-col': isMobile, 'flex-row': !isMobile }"
     >
       <div
-        class="h-[20%] w-full bg-gradient-to-r from-[#285895] via-[#2D75AA] to-[#3090C0] pb-5"
+        class="md:h-full h-[20%] w-full bg-gradient-to-r from-[#285895] via-[#2D75AA] to-[#3090C0] pb-5"
       >
         <div class="flex flex-col justify-center items-center h-full">
-          <img src="assets/logo.png" alt="" class="w-[100px]" />
+          <div *ngIf="!isMobile">
+            <div
+              class="p-2 pb-7 text-3xl text-white text-shadow-md tracking-wider"
+            >
+              Welcome to
+            </div>
+          </div>
+          <img src="assets/logo.png" alt="" class="w-[100px] md:w-[150px]" />
           <div
-            class="text-white tracking-widest font-bold text-lg text-shadow-md"
+            class="text-white tracking-widest font-bold text-lg md:text-2xl text-shadow-md"
           >
             YL Works
           </div>
+          <div *ngIf="!isMobile">
+            <div class="relative h-32 flex flex-col justify-between">
+              <div
+                class="mt-2 text-[12px] text-white/80 tracking-widest text-center"
+              >
+                Manage your daily operations seamlessly.
+              </div>
+
+              <div
+                class="absolute -bottom-30 left-1/2 -translate-x-1/2 text-xs tracking-widest text-white/80"
+              >
+                YL Systems Sdn Bhd
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="relative h-[80%] flex flex-col w-full p-4 login-fade-in">
+      <div
+        class="relative h-[80%] md:h-full md:items-center md:justify-center flex flex-col w-full p-4 login-fade-in"
+      >
         <div
           class="p-4 rounded-b rounded-full absolute -top-6 left-0 right-0 w-full bg-white z-20 "
         ></div>
-        <div class="flex flex-col items-start w-full gap-1 ">
+        <div class="flex flex-col items-start w-full gap-1 md:px-30">
           <div
             class="font-semibold text-3xl tracking-widest pl-2 text-cyan-600"
           >
@@ -65,18 +91,21 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
             Let's get to work!
           </div>
         </div>
-        <div class="border-b border-gray-200 w-full mt-2 mb-2"></div>
-
-        <div class="w-full p-2 rounded-md">
+        <div class="md:px-30">
+          <div class="border-b border-gray-200 w-full mt-2 mb-2"></div>
+        </div>
+        <div class="w-full p-2 rounded-md md:px-30">
           <div [formGroup]="FG">
             <div class="flex flex-col gap-2">
-              <div class="text-gray-500 tracking-wider font-semibold">
+              <div
+                class="text-gray-500 tracking-wider font-semibold md:text-sm"
+              >
                 Email
               </div>
               <input
                 type="text"
                 pInputText
-                class="w-full"
+                class="w-full md:!text-sm"
                 formControlName="email"
               />
               <div
@@ -92,14 +121,16 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
               </div>
             </div>
             <div class="flex flex-col gap-2 mt-5">
-              <div class="text-gray-500 tracking-wider font-semibold">
+              <div
+                class="text-gray-500 tracking-wider font-semibold md:text-sm"
+              >
                 Password
               </div>
               <p-password
                 formControlName="password"
                 [toggleMask]="true"
                 class="w-full"
-                inputStyleClass="!w-full"
+                inputStyleClass="!w-full md:!text-sm"
                 styleClass="!w-full"
                 [feedback]="false"
               />
@@ -122,7 +153,7 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
                   <div class="text-sm text-gray-400">Remember me</div>
                 </div>
                 <div
-                  class="text-sm text-cyan-600"
+                  class="text-sm text-cyan-600 cursor-pointer hover:text-cyan-700"
                   [routerLink]="'/confirm-email'"
                 >
                   Forgot Password ?
@@ -131,7 +162,7 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
             </div>
           </div>
         </div>
-        <div class="w-full px-2 pt-6">
+        <div class="w-full px-2 pt-6 md:px-30">
           <p-button
             (onClick)="onLogin()"
             label="Login"
@@ -140,7 +171,9 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
           ></p-button>
           <div class="text-gray-500 mt-3 text-center tracking-wider text-sm">
             Don't have account ?
-            <b class="font-semibold text-cyan-600" [routerLink]="'/register'"
+            <b
+              class="font-semibold text-cyan-600 cursor-pointer hover:text-cyan-700"
+              [routerLink]="'/register'"
               >Sign Up</b
             >
           </div>
@@ -204,6 +237,8 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Login implements OnDestroy, OnInit {
+  isMobile = window.innerWidth < 770;
+
   private readonly loadingService = inject(LoadingService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
@@ -213,6 +248,11 @@ export class Login implements OnDestroy, OnInit {
   FG!: FormGroup;
   error: boolean = false;
   errorMessage: string = '';
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
 
   constructor() {
     this.FG = new FormGroup({
@@ -241,10 +281,15 @@ export class Login implements OnDestroy, OnInit {
         .pipe(takeUntil(this.ngUnsubscribe))
         .subscribe({
           next: (res) => {
-            this.loadingService.stop();
             if (res.success) {
-              this.router.navigate(['/dashboard']);
+              localStorage.setItem('token', res.token);
+
+              setTimeout(() => {
+                this.loadingService.stop();
+                this.router.navigate(['/dashboard']);
+              }, 1500);
             } else {
+              this.loadingService.stop();
               this.error = true;
               this.errorMessage = res.message ?? '';
               this.cdr.detectChanges();

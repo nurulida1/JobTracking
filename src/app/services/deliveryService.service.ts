@@ -126,6 +126,24 @@ export class DeliveryService {
       .pipe(retry(1), catchError(this.handleError('UndoDelivery')));
   }
 
+  CountSummary(): Observable<{
+    total: number;
+    pending: number;
+    confirmed: number;
+    shipped: number;
+    delivered: number;
+  }> {
+    return this.http
+      .get<{
+        total: number;
+        pending: number;
+        confirmed: number;
+        shipped: number;
+        delivered: number;
+      }>(this.url + '/CountSummary', {})
+      .pipe(retry(1), catchError(this.handleError('CountSummary')));
+  }
+
   private handleError = (context: string) => (error: any) => {
     this.messageService.add({
       severity: 'error',

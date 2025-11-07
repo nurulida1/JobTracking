@@ -14,7 +14,9 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./components/dashboard/dashboard').then((m) => m.Dashboard),
+          import('./components/dashboards/dashboard/dashboard').then(
+            (m) => m.Dashboard
+          ),
       },
     ],
   },
@@ -24,6 +26,13 @@ export const routes: Routes = [
       import('./components/notifications/notifications').then(
         (m) => m.Notifications
       ),
+  },
+  {
+    path: 'change-password-internal',
+    loadComponent: () =>
+      import(
+        './components/change-password-internal/change-password-internal'
+      ).then((m) => m.ChangePasswordInternal),
   },
   {
     path: 'login',
@@ -71,6 +80,22 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'purchase-order',
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadChildren: () =>
+          import(
+            './components/purchase-order/purchase-order-rounting.module'
+          ).then((m) => m.PurchaseOrderRoutingModule),
+      },
+    ],
+  },
+  {
     path: 'job',
     loadComponent: () =>
       import('./shared/components/main-layout/main-layout.component').then(
@@ -80,7 +105,7 @@ export const routes: Routes = [
       {
         path: '',
         loadChildren: () =>
-          import('./components/job/quotation-rounting.module').then(
+          import('./components/job/job-rounting.module').then(
             (m) => m.JobRoutingModule
           ),
       },
@@ -96,7 +121,7 @@ export const routes: Routes = [
       {
         path: '',
         loadChildren: () =>
-          import('./components/delivery/quotation-rounting.module').then(
+          import('./components/delivery/delivery-rounting.module').then(
             (m) => m.DeliveryRoutingModule
           ),
       },

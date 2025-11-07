@@ -3,6 +3,7 @@ import {
   ChangePasswordRequest,
   LoginRequest,
   RegisterRequest,
+  ResetPasswordRequest,
   UserDto,
 } from '../models/UserModel';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -15,7 +16,6 @@ import {
   throwError,
   BehaviorSubject,
   tap,
-  map,
 } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 import {
@@ -23,6 +23,7 @@ import {
   PagingContent,
   BaseResponse,
 } from '../shared/helpers/helpers';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -34,8 +35,14 @@ export class UserService {
 
   constructor(
     private http: HttpClient,
-    private messageService: MessageService
-  ) {}
+    private messageService: MessageService,
+    private router: Router
+  ) {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      this.currentUserSubject.next(JSON.parse(savedUser));
+    }
+  }
 
   get currentUser(): UserDto | null {
     return this.currentUserSubject.value;
@@ -43,6 +50,12 @@ export class UserService {
 
   setCurrentUser(user: UserDto | null): void {
     this.currentUserSubject.next(user);
+
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
   }
 
   GetMany(query: GridifyQueryExtend): Observable<PagingContent<UserDto>> {
@@ -102,14 +115,19 @@ export class UserService {
       .pipe(retry(1), catchError(this.handleError('GetProfile')));
   }
 
-  Login(
-    request: LoginRequest
-  ): Observable<{ success: boolean; user: UserDto; message?: string }> {
+  Login(request: LoginRequest): Observable<{
+    success: boolean;
+    token: string;
+    user: UserDto;
+    message?: string;
+  }> {
     return this.http
-      .post<{ success: boolean; user: UserDto; message?: string }>(
-        `${this.url}/Login`,
-        request
-      )
+      .post<{
+        success: boolean;
+        token: string;
+        user: UserDto;
+        message?: string;
+      }>(`${this.url}/Login`, request)
       .pipe(
         retry(1),
         tap((res) => {
@@ -140,10 +158,16 @@ export class UserService {
       .pipe(retry(1), catchError(this.handleError('ResetPasswordLink')));
   }
 
-  ResetPassword(request: ChangePasswordRequest): Observable<BaseResponse> {
+  ResetPassword(request: ResetPasswordRequest): Observable<BaseResponse> {
     return this.http
       .post<BaseResponse>(`${this.url}/ResetPassword`, request) // no { Data: ... }
       .pipe(retry(1), catchError(this.handleError('ResetPassword')));
+  }
+
+  ChangePassword(request: ChangePasswordRequest): Observable<BaseResponse> {
+    return this.http
+      .post<BaseResponse>(`${this.url}/ChangePassword`, request) // no { Data: ... }
+      .pipe(retry(1), catchError(this.handleError('ChangePassword')));
   }
 
   Enable(id: number): Observable<BaseResponse> {
@@ -158,6 +182,12 @@ export class UserService {
     return this.http
       .put<BaseResponse>(`${this.url}/disable`, params)
       .pipe(retry(1), catchError(this.handleError('Disable')));
+  }
+
+  logout(): void {
+    this.setCurrentUser(null);
+    localStorage.removeItem('access_token');
+    this.router.navigate(['/login']);
   }
 
   private handleError = (context: string) => (error: any) => {

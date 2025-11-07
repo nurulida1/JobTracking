@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   inject,
   OnDestroy,
 } from '@angular/core';
@@ -26,7 +27,7 @@ import { MessageService } from 'primeng/api';
   ],
   template: `
     <ng-container *ngIf="!emailSent; else emailSentTemplate">
-      <div class="w-full min-h-screen flex flex-col p-2 pt-3">
+      <div class="w-full min-h-screen flex flex-col p-2 pt-3" *ngIf="isMobile">
         <div class="flex flex-row items-center gap-2" [routerLink]="'/login'">
           <svg
             class="w-6 h-6 text-gray-800"
@@ -70,8 +71,72 @@ import { MessageService } from 'primeng/api';
             styleClass="w-full tracking-wider !py-3"
             severity="info"
           ></p-button>
-        </div></div
-    ></ng-container>
+        </div>
+      </div>
+      <div *ngIf="!isMobile" class="flex flex-row w-full min-h-screen">
+        <div
+          class="relative flex-1 border-r overflow-hidden border-gray-300 min-h-screen p-2 flex items-center justify-center"
+        >
+          <img src="assets/forgot-password.png" alt="" class="w-[400px]" />
+        </div>
+        <div class="flex-1 min-h-screen p-2 flex justify-center items-center">
+          <div class="w-[70%] h-[50%]">
+            <div
+              class="flex flex-col border px-3 py-7 rounded-lg border-gray-300 shadow-lg"
+            >
+              <div class="p-2 text-2xl text-gray-700 tracking-wider font-bold">
+                Forgot Password ?
+              </div>
+              <div class="px-3 text-xs tracking-wide text-gray-500">
+                Enter the email associated with your account and we'll send an
+                email with instructions to reset your password.
+              </div>
+              <div
+                class="pt-6 px-3 text-gray-600 tracking-wider font-medium text-sm"
+              >
+                Email address
+              </div>
+              <div class="px-3 pt-2">
+                <input
+                  type="text"
+                  class="w-full"
+                  pInputText
+                  [(ngModel)]="email"
+                />
+                <div
+                  *ngIf="invalidEmail"
+                  class="text-xs text-red-500 tracking-wide"
+                >
+                  Invalid email
+                </div>
+              </div>
+
+              <div class="px-3">
+                <div class="border-b mt-4 mb-4 border-gray-200"></div>
+              </div>
+              <div class="px-3">
+                <p-button
+                  (onClick)="SendEmail()"
+                  label="Send Email Link"
+                  severity="info"
+                  styleClass="!text-sm !w-full !text-shadow-md !tracking-wider"
+                ></p-button>
+              </div>
+              <div
+                class="text-xs pt-2 tracking-wider text-center text-gray-500"
+              >
+                Back to
+                <b
+                  class="text-cyan-600 cursor-pointer hover:text-cyan-700"
+                  [routerLink]="'/login'"
+                  >Sign In</b
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
     <ng-template #emailSentTemplate>
       <div class="w-full min-h-screen flex flex-col p-3 pt-3">
         <div
@@ -141,6 +206,12 @@ export class ConfirmEmail implements OnDestroy {
   message: string = '';
   invalidEmail: boolean = false;
   emailSent: boolean = false;
+  isMobile = window.innerWidth < 770;
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
 
   SendEmail() {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

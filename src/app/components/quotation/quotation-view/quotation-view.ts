@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -16,7 +17,7 @@ import {
   BuildSortText,
   GridifyQueryExtend,
 } from '../../../shared/helpers/helpers';
-import { finalize, Subject, takeUntil } from 'rxjs';
+import { finalize, Subject, Subscription, takeUntil } from 'rxjs';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -25,8 +26,10 @@ import { QuotationStatus } from '../../../shared/enum/enum';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
-import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { DataViewModule } from 'primeng/dataview';
+import { NotificationService } from '../../../services/notificationService.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-quotation-view',
@@ -39,321 +42,391 @@ import { DataViewModule } from 'primeng/dataview';
     TooltipModule,
     InputTextModule,
     FormsModule,
-    SidebarComponent,
     DataViewModule,
+    ConfirmDialogModule,
   ],
-  template: ` <div
-    class="relative w-full min-h-screen bg-cover bg-center flex items-center justify-center"
-    style="background-image: url('assets/background.png');"
-  >
-    <div class="absolute inset-0 backdrop-blur-sm bg-black/40 z-10"></div>
+  template: `
     <div
-      class="relative z-20 border border-gray-400/30 p-4 rounded-3xl bg-black/20 
-          w-[98%] min-h-[98vh] shadow-xl
-          shadow-[0_0_40px_rgba(173,216,230,0.5)] text-white backdrop-filter backdrop-blur-xl
-          flex flex-col"
+      class="relative w-full bg-cover bg-center flex items-center justify-center bg-white/60"
     >
-      <div
-        class="text-lg font-semibold tracking-widest mb-2 text-shadow-lg"
-      ></div>
-      <div class="flex flex-row w-full">
-        <app-sidebar *ngIf="!isMobile"></app-sidebar>
-
-        <div class="w-full">
-          <div class="pt-10">
-            <div
-              class="bg-black/30 p-4 rounded-xl border border-gray-700/50 shadow-md flex flex-col"
+      <div class="relative w-full min-h-[98vh] md:min-h-[91.8vh] flex flex-col">
+        <div class="w-full pt-14 md:pt-0">
+          <div class="p-4 flex flex-col">
+            <h3
+              class="text-xl font-semibold mb-3 text-gray-600 text-shadow-md text-shadow-black/10 tracking-wider"
             >
-              <h3
-                class="text-lg font-semibold mb-3 text-blue-400 tracking-wider"
+              Quotations Management
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+              <div
+                class=" px-3 flex flex-row gap-4 shadow-lg bg-gradient-to-r from-[#9B7DE2] to-[#c8b8eb] border border-gray-200 flex-1 rounded-md"
               >
-                Quotations Management
-              </h3>
-              <div class="grid grid-cols-2 gap-2 mb-4">
-                <div
-                  class="text-center flex flex-row items-center justify-center gap-5 shadow-md bg-black/20 flex-1 py-4 rounded-md"
-                >
-                  <!-- <div class="shadow-lg p-3 rounded-full pl-4 bg-black/50">
-                    <img src="assets/drafts.png" alt="" class="w-[30px]" />
-                  </div> -->
-                  <div class="flex flex-col gap-2">
+                <div class="flex flex-row items-center justify-between w-full">
+                  <div class="flex flex-col gap-5 justify-between py-2 h-full">
                     <div
-                      class="text-3xl font-semibold text-yellow-400 text-shadow-md tracking-widest"
+                      class="text-xs text-white font-semibold text-shadow-md tracking-widest"
+                    >
+                      Pending Approval
+                    </div>
+                    <div
+                      class="text-4xl font-semibold text-white text-shadow-lg tracking-widest"
                     >
                       {{ dashboardCount?.pending }}
                     </div>
-                    <div class="text-xs text-gray-400 tracking-wider">
-                      Pending Approval
-                    </div>
+                  </div>
+                  <div
+                    class="bg-[#9B7DE2] inset-shadow-sm inset-shadow-black/50 w-10 h-10 rounded-full inset-shadow-sm flex items-center justify-center"
+                  >
+                    <div
+                      class="pi pi-hourglass text-[#543896] !text-shadow-md
+"
+                    ></div>
                   </div>
                 </div>
-                <div
-                  class="text-center flex flex-row items-center justify-center gap-5 shadow-md bg-black/20 flex-1 py-4 rounded-md"
-                >
-                  <!-- <div class="shadow-lg p-3 rounded-full pl-4 pb-4 bg-black/50">
-                    <img src="assets/pending.png" alt="" class="w-[30px]" />
-                  </div> -->
-                  <div class="flex flex-col gap-2">
+              </div>
+              <div
+                class=" px-3 flex flex-row gap-5 shadow-lg bg-gradient-to-r from-[#81e424] to-[#ace78b] border border-gray-200 flex-1 rounded-md"
+              >
+                <div class="flex flex-row items-center justify-between w-full">
+                  <div class="flex flex-col gap-4 justify-between py-2 h-full">
                     <div
-                      class="text-3xl font-semibold tracking-widest text-green-400 text-shadow-md"
+                      class="text-xs text-white font-semibold text-shadow-md tracking-widest"
+                    >
+                      Approved
+                    </div>
+                    <div
+                      class="text-4xl font-semibold text-white text-shadow-lg tracking-widest"
                     >
                       {{ dashboardCount?.approved }}
                     </div>
-                    <div class="text-xs text-gray-400 tracking-wider">
-                      Approved
-                    </div>
+                  </div>
+                  <div
+                    class="bg-[#81e424] inset-shadow-sm inset-shadow-black/50 w-10 h-10 rounded-full inset-shadow-sm flex items-center justify-center"
+                  >
+                    <div
+                      class="pi pi-check text-[#51881e] !text-shadow-md
+"
+                    ></div>
                   </div>
                 </div>
-                <div
-                  class="text-center flex flex-row items-center justify-center gap-5 shadow-md bg-black/20 flex-1 py-4 rounded-md"
-                >
-                  <!-- <div class="shadow-lg p-3 rounded-full pl-4 pb-4 bg-black/50">
-                    <img src="assets/ready.png" alt="" class="w-[30px]" />
-                  </div> -->
-                  <div class="flex flex-col gap-2">
+              </div>
+              <div
+                class=" px-3 flex flex-row gap-5 shadow-lg bg-gradient-to-r from-[#F86464] to-[#f38282] border border-gray-200 flex-1 rounded-md"
+              >
+                <div class="flex flex-row items-center justify-between w-full">
+                  <div class="flex flex-col gap-4 justify-between py-2 h-full">
                     <div
-                      class="text-3xl font-semibold tracking-widest text-red-400 text-shadow-md"
+                      class="text-xs text-white font-semibold text-shadow-md tracking-widest"
+                    >
+                      Rejected
+                    </div>
+                    <div
+                      class="text-4xl font-semibold text-white text-shadow-lg tracking-widest"
                     >
                       {{ dashboardCount?.rejected }}
                     </div>
-                    <div class="text-xs text-gray-400 tracking-wider">
-                      Rejected
+                  </div>
+                  <div
+                    class="bg-[#F86464] inset-shadow-sm inset-shadow-black/50 w-10 h-10 rounded-full inset-shadow-sm flex items-center justify-center"
+                  >
+                    <div
+                      class="pi pi-times text-[#c42d2d] !text-shadow-md
+"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                [routerLink]="'/quotation/form/'"
+                class=" px-3 flex flex-row gap-5 shadow-lg cursor-pointer hover:scale-102 bg-gradient-to-r from-[#F79355] to-[#f5b37e] border border-gray-200 flex-1 rounded-md"
+              >
+                <div
+                  class="flex flex-row items-center justify-center gap-2 w-full"
+                >
+                  <div class="flex flex-col text-center gap-1">
+                    <div
+                      class="text-xs text-white text-shadow-lg text-shadow-black/30 tracking-widest font-bold"
+                    >
+                      Add New Quotation
+                    </div>
+                    <div
+                      class="text-[10px] italic text-white/80 text-shadow-md tracking-wider"
+                    >
+                      Tap here to create your next quotation.
                     </div>
                   </div>
-                </div>
-                <div
-                  [routerLink]="'/quotation/form/'"
-                  class="text-center flex flex-col gap-3 items-center justify-center hover:bg-black/50 cursor-pointer bg-black/20 flex-1 py-4 rounded-md shadow-md"
-                >
                   <div
-                    class="text-3xl pi pi-plus font-semibold tracking-widest text-green-400 text-shadow-md"
-                  ></div>
-                  <div class="text-xs text-gray-400 tracking-wider">
-                    Add New Quotation
+                    class="bg-[#F79355] w-10 h-10 rounded-full inset-shadow-sm inset-shadow-black/50 flex items-center justify-center"
+                  >
+                    <div
+                      class="pi pi-plus text-[#a04f1c] !text-shadow-md
+"
+                    ></div>
                   </div>
                 </div>
               </div>
-              <div class="mb-2">
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="search"
-                  class="w-full !bg-black/30 !border-none !text-white/80 placeholder:!text-white/70 !text-sm !tracking-wide"
-                  placeholder="Search by quotation no"
-                  (keyup)="Search(search)"
-                />
-              </div>
-              <div
-                class="w-full p-2 flex flex-col items-center justify-center hidden 2xl:block"
-              >
-                <div class="flex-grow w-full">
-                  <p-table
-                    #fTable
-                    dataKey="id"
-                    styleClass="!w-full"
-                    tableStyleClass="!w-full"
-                    [tableStyle]="{ 'min-width': '65rem' }"
-                    [value]="PagingSignal().Data"
-                    [paginator]="true"
-                    [rows]="Query.PageSize"
-                    [totalRecords]="PagingSignal().TotalElements"
-                    [rowsPerPageOptions]="[10, 20, 30, 50]"
-                    size="small"
-                    [lazy]="true"
-                    (onLazyLoad)="NextPage($event)"
-                  >
-                    <ng-template #header>
-                      <tr>
-                        <th
-                          class="!border-none !text-center !font-thin tracking-wider !w-[20%] !bg-black/20"
-                        >
-                          Quotation No
-                        </th>
-                        <th
-                          class="!border-none !text-center !font-thin tracking-wider !w-[20%] !bg-black/20"
-                        >
-                          Vendor Name
-                        </th>
-                        <th
-                          class="!border-none !text-center !font-thin tracking-wider !w-[20%] !bg-black/20"
-                        >
-                          Received Date
-                        </th>
-                        <th
-                          class="!border-none !text-center !font-thin tracking-wider !w-[15%] !bg-black/20"
-                        >
-                          Amount
-                        </th>
-                        <th
-                          class="!border-none !text-center !font-thin tracking-wider !w-[15%] !bg-black/20"
-                        >
-                          Status
-                        </th>
-                        <th
-                          class="!border-none !text-center !font-thin tracking-wider !w-[10%] !bg-black/20"
-                        >
-                          Action
-                        </th>
-                      </tr>
-                    </ng-template>
-                    <ng-template #body let-data>
-                      <tr>
-                        <td class="!text-center">
-                          {{ data.quotationNo }}
-                        </td>
-                        <td class="!text-center">
-                          {{ data.vendorName }}
-                        </td>
-                        <td class="!text-center">
-                          {{ data.receivedDate | date : 'dd/MM/YYYY' }}
-                        </td>
-                        <td class="!text-center">
-                          {{ data.quotationAmount | currency : 'RM ' }}
-                        </td>
-                        <td class="!text-center">
-                          <p-tag
-                            styleClass="!tracking-wider !px-3"
-                            [value]="DisplayStatus(data.status)"
-                            [severity]="SeverityStatus(data.status)"
-                          ></p-tag>
-                        </td>
-                        <td class="!text-center">
-                          <p-button
-                            icon="pi pi-pencil"
-                            styleClass="!text-xs"
-                            [text]="true"
-                            severity="info"
-                            pTooltip="Edit"
-                            ><ng-template pTemplate="icon">
-                              <i
-                                class="pi pi-pencil !text-[15px]"
-                              ></i> </ng-template
-                          ></p-button>
-                        </td>
-                      </tr>
-                    </ng-template>
-                    <ng-template #emptymessage> </ng-template>
-                    <tr>
-                      <td colspan="100%">No data found.</td>
-                    </tr>
-                  </p-table>
-                </div>
-              </div>
-              <div class="block 2xl:hidden pb-20 mt-3">
-                <p-dataview
+            </div>
+            <div class="mb-2 relative">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="search"
+                class="w-full !text-sm !tracking-wide !border-gray-200"
+                placeholder="Search by quotation no"
+                (keyup)="Search(search)"
+              />
+              <i
+                class="pi pi-search !text-sm absolute top-2 right-3 !text-gray-500"
+              ></i>
+            </div>
+            <div
+              class="w-full p-2 md:flex flex-col items-center justify-center hidden md:block"
+            >
+              <div class="w-full">
+                <p-table
+                  #fTable
+                  dataKey="id"
+                  styleClass="!w-full"
+                  tableStyleClass="!w-full border border-gray-200"
+                  [tableStyle]="{ 'min-width': '50rem' }"
                   [value]="PagingSignal().Data"
-                  [rows]="Query.PageSize"
                   [paginator]="true"
+                  [rows]="Query.PageSize"
+                  [totalRecords]="PagingSignal().TotalElements"
+                  [rowsPerPageOptions]="[10, 20, 30, 50]"
+                  size="small"
+                  [lazy]="true"
+                  (onLazyLoad)="NextPage($event)"
                 >
-                  <ng-template #list let-items>
-                    <div class="grid grid-cols-12 gap-4 grid-nogutter">
+                  <ng-template #header>
+                    <tr>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                      >
+                        Quotation No
+                      </th>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                      >
+                        Vendor Name
+                      </th>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                      >
+                        Received Date
+                      </th>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
+                      >
+                        Amount
+                      </th>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
+                      >
+                        Status
+                      </th>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
+                      >
+                        Action
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template #body let-data>
+                    <tr>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        {{ data.quotationNo }}
+                      </td>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        {{ data.vendorName }}
+                      </td>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        {{ data.receivedDate | date : 'dd/MM/YYYY' }}
+                      </td>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        {{ data.quotationAmount | currency : 'RM ' }}
+                      </td>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        <p-tag
+                          styleClass="!tracking-wider !text-xs !px-4 !rounded-full"
+                          [value]="DisplayStatus(data.status)"
+                          [severity]="SeverityStatus(data.status)"
+                        ></p-tag>
+                      </td>
+                      <td
+                        class="!text-center !text-sm flex flex-row justify-center items-center !border-gray-200"
+                      >
+                        <p-button
+                          *ngIf="data.status === 0"
+                          (onClick)="ActionClick(data.id, 'approve', $event)"
+                          styleClass="!text-xs"
+                          [text]="true"
+                          severity="success"
+                          pTooltip="Approve"
+                          tooltipPosition="top"
+                          ><ng-template pTemplate="icon">
+                            <i
+                              class="pi pi-check-circle !text-[15px]"
+                            ></i> </ng-template
+                        ></p-button>
+                        <p-button
+                          *ngIf="data.status === 0"
+                          (onClick)="ActionClick(data.id, 'reject', $event)"
+                          styleClass="!text-xs"
+                          [text]="true"
+                          severity="danger"
+                          pTooltip="Reject"
+                          tooltipPosition="top"
+                          ><ng-template pTemplate="icon">
+                            <i
+                              class="pi pi-times-circle !text-[15px]"
+                            ></i> </ng-template
+                        ></p-button>
+                        <p-button
+                          (onClick)="ActionClick(data.id, 'edit')"
+                          styleClass="!text-xs"
+                          [text]="true"
+                          severity="info"
+                          pTooltip="Edit"
+                          tooltipPosition="top"
+                          ><ng-template pTemplate="icon">
+                            <i
+                              class="pi pi-pencil !text-[15px]"
+                            ></i> </ng-template
+                        ></p-button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template #emptymessage>
+                    <tr>
+                      <td
+                        colspan="100%"
+                        class="!w-full !text-center !text-gray-500 !text-sm"
+                      >
+                        No data found.
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </div>
+            <div class="block md:hidden pb-20 mt-3">
+              <p-dataview
+                [value]="PagingSignal().Data"
+                [rows]="Query.PageSize"
+                [paginator]="true"
+              >
+                <ng-template #list let-items>
+                  <div class="grid grid-cols-12 gap-4 grid-nogutter">
+                    <div
+                      class="col-span-12"
+                      *ngFor="let item of items; let first = first"
+                    >
                       <div
-                        class="col-span-12"
-                        *ngFor="let item of items; let first = first"
+                        class="flex flex-col sm:flex-row sm:items-center px-6 pt-6 pb-2 gap-4"
+                        [ngClass]="{
+                          'border-t border-gray-200': !first
+                        }"
                       >
                         <div
-                          class="flex flex-col sm:flex-row sm:items-center px-6 pt-6 pb-2 gap-4"
-                          [ngClass]="{
-                            'border-t border-white/10': !first
-                          }"
+                          class="flex flex-col gap-1 tracking-wider text-gray-700"
                         >
                           <div
-                            class="flex flex-col gap-1 tracking-wider text-white"
+                            class="flex flex-row items-center justify-between pb-3"
                           >
-                            <div
-                              class="relative flex flex-row items-center justify-between"
+                            <span class="font-medium"
+                              >#{{ item.quotationNo }}</span
                             >
-                              <span class="font-medium mb-3"
-                                >#{{ item.quotationNo }}</span
-                              >
-                              <p-tag
-                                [value]="DisplayStatus(item.status)"
-                                [severity]="SeverityStatus(item.status)"
-                                class="absolute -top-3 -right-2 !text-xs dark:!bg-surface-900 !tracking-wider !rounded-full !px-4"
-                              />
-                            </div>
-                            <div
-                              class="text-xs text-white/70 font-thin flex flex-row justify-between items-center"
-                            >
-                              <div>Vendor Name</div>
-                              <div>{{ item.vendorName }}</div>
-                            </div>
-                            <div
-                              class="text-xs text-white/70 font-thin flex flex-row justify-between items-center"
-                            >
-                              <div>Received Date</div>
-                              <div>
-                                {{ item.receivedDate | date : 'dd/MM/YYYY' }}
-                              </div>
-                            </div>
-                            <div
-                              class="text-xs text-white/70 font-thin flex flex-row justify-between items-center"
-                            >
-                              <div>Amount</div>
-                              <div>
-                                {{ item.quotationAmount | currency : 'RM ' }}
-                              </div>
+                            <p-tag
+                              [value]="DisplayStatus(item.status)"
+                              [severity]="SeverityStatus(item.status)"
+                              class="!text-xs dark:!bg-surface-900 !tracking-wider !rounded-full !px-4"
+                            />
+                          </div>
+                          <div
+                            class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
+                          >
+                            <div>Vendor Name</div>
+                            <div>{{ item.vendorName }}</div>
+                          </div>
+                          <div
+                            class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
+                          >
+                            <div>Received Date</div>
+                            <div>
+                              {{ item.receivedDate | date : 'dd/MM/YYYY' }}
                             </div>
                           </div>
                           <div
-                            class="border-b border-dashed border-white/20 "
-                          ></div>
-                          <div
-                            class="flex flex-row items-center justify-end gap-3"
+                            class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
                           >
-                            <i
-                              *ngIf="item.status === QuotationStatus.Pending"
-                              (click)="ActionClick(item.id, 'reject')"
-                              class="pi pi-times-circle !text-sm !text-red-500 !text-shadow-md"
-                            ></i>
-                            <i
-                              *ngIf="item.status === QuotationStatus.Pending"
-                              (click)="ActionClick(item.id, 'approve')"
-                              class="pi pi-check-circle !text-sm !text-green-500 !text-shadow-md"
-                            ></i>
-                            <i
-                              (click)="ActionClick(item.id, 'edit')"
-                              class="pi pi-pencil !text-sm !text-blue-500 !text-shadow-md"
-                            ></i>
+                            <div>Amount</div>
+                            <div>
+                              {{ item.quotationAmount | currency : 'RM ' }}
+                            </div>
                           </div>
+                        </div>
+                        <div
+                          class="border-b border-dashed border-gray-300"
+                        ></div>
+                        <div
+                          class="flex flex-row items-center justify-end gap-3"
+                        >
+                          <i
+                            *ngIf="item.status === QuotationStatus.Pending"
+                            (click)="ActionClick(item.id, 'reject')"
+                            class="pi pi-times-circle !text-sm !text-red-500 !text-shadow-md"
+                          ></i>
+                          <i
+                            *ngIf="item.status === QuotationStatus.Pending"
+                            (click)="ActionClick(item.id, 'approve')"
+                            class="pi pi-check-circle !text-sm !text-green-500 !text-shadow-md"
+                          ></i>
+                          <i
+                            (click)="ActionClick(item.id, 'edit')"
+                            class="pi pi-pencil !text-sm !text-blue-500 !text-shadow-md"
+                          ></i>
                         </div>
                       </div>
                     </div>
-                  </ng-template>
-                  <ng-template #emptymessage>
-                    <div class="flex justify-center items-center pt-3">
-                      <img
-                        src="assets/no-results.png"
-                        alt=""
-                        class="w-[50px]"
-                      />
-                    </div>
-                    <div
-                      class="text-sm text-white tracking-wider text-center p-3"
-                    >
-                      No results found
-                    </div>
-                  </ng-template>
-                </p-dataview>
-              </div>
+                  </div>
+                </ng-template>
+                <ng-template #emptymessage>
+                  <div class="flex justify-center items-center pt-3">
+                    <img src="assets/no-results.png" alt="" class="w-[50px]" />
+                  </div>
+                  <div
+                    class="text-sm text-gray-500 tracking-wider text-center p-3"
+                  >
+                    No results found
+                  </div>
+                </ng-template>
+              </p-dataview>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>`,
+    <p-confirmdialog />
+  `,
   styleUrl: './quotation-view.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuotationView implements OnInit, OnDestroy {
-  isMobile = window.innerWidth < 770;
   @ViewChild('fTable') fTable?: Table;
 
-  private readonly loadingService = inject(LoadingService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly quotationService = inject(QuotationService);
+  private readonly loadingService = inject(LoadingService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
+
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
+
+  private notificationSub!: Subscription;
+  notifications: { message: string; time: Date }[] = [];
 
   Query: GridifyQueryExtend = {} as GridifyQueryExtend;
   PagingSignal = signal<{ Data: any[]; TotalElements: number }>({
@@ -367,6 +440,12 @@ export class QuotationView implements OnInit, OnDestroy {
   } | null = null;
   search: string = '';
   QuotationStatus = QuotationStatus;
+  isMobile = window.innerWidth < 770;
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
 
   constructor() {
     this.Query.Page = 1;
@@ -378,6 +457,8 @@ export class QuotationView implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadingService.start();
+
+    // 1️⃣ Load dashboard count
     this.quotationService
       .GetDashboardCount()
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -386,13 +467,31 @@ export class QuotationView implements OnInit, OnDestroy {
           this.dashboardCount = res;
           this.cdr.markForCheck();
         },
-        error: (err) => {
-          this.loadingService.stop();
-        },
-        complete: () => {
-          this.loadingService.stop();
-        },
+        error: () => this.loadingService.stop(),
+        complete: () => this.loadingService.stop(),
       });
+
+    // 2️⃣ Subscribe to SignalR updates
+    this.notificationSub = this.notificationService.message$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((msg) => {
+        if (msg) {
+          console.log('📢 SignalR update received:', msg);
+          this.refreshDashboard(); // refresh both table + counts
+          this.addNotification(msg);
+        }
+      });
+  }
+
+  refreshDashboard() {
+    this.quotationService.GetDashboardCount().subscribe({
+      next: (res) => {
+        this.dashboardCount = res;
+        this.cdr.markForCheck();
+      },
+    });
+
+    this.GetData(); // refresh table too
   }
 
   GetData() {
@@ -478,10 +577,10 @@ export class QuotationView implements OnInit, OnDestroy {
 
   DisplayStatus(status: QuotationStatus) {
     switch (status) {
-      case QuotationStatus.Pending:
-        return 'Pending';
       case QuotationStatus.Approved:
         return 'Approved';
+      case QuotationStatus.Pending:
+        return 'Pending';
       default:
         return 'Rejected';
     }
@@ -492,75 +591,103 @@ export class QuotationView implements OnInit, OnDestroy {
       case QuotationStatus.Approved:
         return 'success';
       case QuotationStatus.Pending:
-        return 'warning';
+        return 'warn';
       default:
         return 'danger';
     }
   }
 
-  ActionClick(id: number, type: string) {
+  ActionClick(id: number, type: string, event?: Event) {
     if (type === 'edit') {
       this.router.navigate(['/quotation/form'], { queryParams: { id } });
       return;
     }
 
-    this.loadingService.start();
+    this.confirmationService.confirm({
+      target: event?.target as EventTarget,
+      message: 'Are you sure that you want to proceed?',
+      header: 'Confirmation',
+      closable: true,
+      closeOnEscape: true,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonProps: {
+        label: 'Cancel',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Confirm',
+      },
+      accept: () => {
+        this.loadingService.start();
 
-    let action$ =
-      type === 'approve'
-        ? this.quotationService.Approve(id)
-        : this.quotationService.Reject(id);
+        let action$ =
+          type === 'approve'
+            ? this.quotationService.Approve(id)
+            : this.quotationService.Reject(id);
 
-    action$
-      .pipe(
-        takeUntil(this.ngUnsubscribe),
-        finalize(() => this.loadingService.stop())
-      )
-      .subscribe({
-        next: (res) => {
-          // Update PagingSignal
-          this.PagingSignal.update((state) => {
-            const newData = state.Data.map((item) => {
-              if (item.id === id) {
-                const newStatus =
-                  type === 'approve'
-                    ? QuotationStatus.Approved
-                    : QuotationStatus.Rejected;
-                return { ...item, status: newStatus };
+        action$
+          .pipe(
+            takeUntil(this.ngUnsubscribe),
+            finalize(() => this.loadingService.stop())
+          )
+          .subscribe({
+            next: (res) => {
+              // Update PagingSignal
+              this.PagingSignal.update((state) => {
+                const newData = state.Data.map((item) => {
+                  if (item.id === id) {
+                    const newStatus =
+                      type === 'approve'
+                        ? QuotationStatus.Approved
+                        : QuotationStatus.Rejected;
+                    return { ...item, status: newStatus };
+                  }
+                  return item;
+                });
+                return { ...state, Data: newData };
+              });
+
+              // Update dashboardCount locally
+              if (this.dashboardCount) {
+                if (type === 'approve') {
+                  this.dashboardCount.pending = Math.max(
+                    this.dashboardCount.pending - 1,
+                    0
+                  );
+                  this.dashboardCount.approved += 1;
+                } else if (type === 'reject') {
+                  this.dashboardCount.pending = Math.max(
+                    this.dashboardCount.pending - 1,
+                    0
+                  );
+                  this.dashboardCount.rejected += 1;
+                }
               }
-              return item;
-            });
-            return { ...state, Data: newData };
+
+              this.cdr.markForCheck();
+            },
+            error: (err) => {
+              console.error(err);
+            },
           });
+      },
+      reject: () => {},
+    });
+  }
 
-          // Update dashboardCount locally
-          if (this.dashboardCount) {
-            if (type === 'approve') {
-              this.dashboardCount.pending = Math.max(
-                this.dashboardCount.pending - 1,
-                0
-              );
-              this.dashboardCount.approved += 1;
-            } else if (type === 'reject') {
-              this.dashboardCount.pending = Math.max(
-                this.dashboardCount.pending - 1,
-                0
-              );
-              this.dashboardCount.rejected += 1;
-            }
-          }
-
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error(err);
-        },
-      });
+  addNotification(message: string) {
+    const newNotification = { message, time: new Date() };
+    this.notifications = this.notifications
+      ? [newNotification, ...this.notifications]
+      : [newNotification];
+    this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+    if (this.notificationSub) this.notificationSub.unsubscribe();
     this.loadingService.stop();
   }
 }

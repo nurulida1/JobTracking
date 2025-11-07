@@ -16,7 +16,7 @@ import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
 import { LoadingService } from '../../services/loading.service';
 import { UserService } from '../../services/userService.service';
-import { ActivatedRoute, RouterLink, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ValidateAllFormFields } from '../../shared/helpers/helpers';
 import { Subject, takeUntil } from 'rxjs';
 

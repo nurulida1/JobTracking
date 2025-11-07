@@ -1,9 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../environments/environment.development';
 import { DashboardCount } from '../models/AppModels';
 import { Observable, retry, catchError, throwError } from 'rxjs';
+import { JobDto, JobTaskResponse } from '../models/JobModels';
 
 @Injectable({
   providedIn: 'root',
@@ -22,16 +23,19 @@ export class AppService {
       .pipe(retry(1), catchError(this.handleError('GetDashboardCount')));
   }
 
-  GetNotifications(): Observable<[{ message: string; time: Date }]> {
-    return this.http
-      .get<[{ message: string; time: Date }]>(this.url + '/notifications', {})
-      .pipe(retry(1), catchError(this.handleError('GetNotifications')));
-  }
-
   QuotationChart(): Observable<[{ date: Date; count: number }]> {
     return this.http
       .get<[{ date: Date; count: number }]>(this.url + '/quotationChart', {})
       .pipe(retry(1), catchError(this.handleError('QuotationChart')));
+  }
+
+  TodayTasks(userId: number): Observable<JobTaskResponse> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http
+      .get<JobTaskResponse>(`https://192.168.1.77:5000/technician/todayTasks`, {
+        params,
+      })
+      .pipe(retry(1), catchError(this.handleError('TodayTasks')));
   }
 
   private handleError = (context: string) => (error: any) => {
