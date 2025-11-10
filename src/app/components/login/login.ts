@@ -24,6 +24,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ValidateAllFormFields } from '../../shared/helpers/helpers';
+import { AuthService } from '../../services/authService';
 
 @Component({
   selector: 'app-login',
@@ -100,23 +101,22 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
               <div
                 class="text-gray-500 tracking-wider font-semibold md:text-sm"
               >
-                Email
+                Username
               </div>
               <input
                 type="text"
                 pInputText
                 class="w-full md:!text-sm"
-                formControlName="email"
+                formControlName="username"
               />
               <div
-                *ngIf="FG.get('email')?.touched && FG.get('email')?.invalid"
+                *ngIf="
+                  FG.get('username')?.touched && FG.get('username')?.invalid
+                "
                 class="text-red-500 text-xs"
               >
-                <div *ngIf="FG.get('email')?.errors?.['required']">
+                <div *ngIf="FG.get('username')?.errors?.['required']">
                   Email is required.
-                </div>
-                <div *ngIf="FG.get('email')?.errors?.['email']">
-                  Please enter a valid email address.
                 </div>
               </div>
             </div>
@@ -243,6 +243,7 @@ export class Login implements OnDestroy, OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   FG!: FormGroup;
@@ -256,10 +257,7 @@ export class Login implements OnDestroy, OnInit {
 
   constructor() {
     this.FG = new FormGroup({
-      email: new FormControl<string | null>(null, [
-        Validators.required,
-        Validators.email,
-      ]),
+      username: new FormControl<string | null>(null, Validators.required),
       password: new FormControl<string | null>(null, Validators.required),
       rememberMe: new FormControl<boolean>(false),
     });
@@ -276,14 +274,12 @@ export class Login implements OnDestroy, OnInit {
   onLogin() {
     if (this.FG.valid) {
       this.loadingService.start();
-      this.userService
-        .Login(this.FG.value)
+      this.authService
+        .login(this.FG.get('username')?.value, this.FG.get('password')?.value)
         .pipe(takeUntil(this.ngUnsubscribe))
         .subscribe({
           next: (res) => {
             if (res.success) {
-              localStorage.setItem('token', res.token);
-
               setTimeout(() => {
                 this.loadingService.stop();
                 this.router.navigate(['/dashboard']);

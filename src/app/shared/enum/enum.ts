@@ -3,7 +3,12 @@ export enum DeliveryStatus {
   Delivered = 'Delivered',
 }
 
-export enum PurchaseOrderStatus {}
+export enum PurchaseOrderStatus {
+  Draft = 'Draft',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+  Cancelled = 'Cancelled',
+}
 
 export enum QuotationStatus {
   Pending = 0,

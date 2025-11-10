@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   computed,
+  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -29,8 +30,9 @@ import { NotificationDto } from '../../../models/notificationModels';
     PopoverModule,
     DialogModule,
     AvatarModule,
+    RouterLink,
   ],
-  template: `<div class="px-2 py-1 w-full ">
+  template: `<div class="px-2 py-1 w-full">
     <div class="flex flex-row items-center justify-between">
       <div
         class="font-semibold tracking-widest text-cyan-500 text-shadow-md text-shadow-black/10 text-base md:text-xl"
@@ -94,7 +96,13 @@ import { NotificationDto } from '../../../models/notificationModels';
               Edit Profile
             </div>
             <div
-              class="px-3 py-1 cursor-pointer hover:text-gray-700 hover:font-semibold"
+              class="px-3 py-1"
+              [routerLink]="'/change-password'"
+              [ngClass]="{
+                'text-gray-700 font-semibold': isActive('/change-password'),
+                'cursor-pointer hover:text-gray-700 hover:font-semibold':
+                  !isActive('/change-password')
+              }"
             >
               Change Password
             </div>
@@ -102,7 +110,7 @@ import { NotificationDto } from '../../../models/notificationModels';
               (click)="toggleDarkMode()"
               class="px-3 py-1 cursor-pointer hover:text-gray-700 hover:font-semibold"
             >
-              Dark Theme
+              {{ isDarkMode() ? 'Light' : 'Dark' }} Theme
             </div>
             <div
               (click)="LogoutClick()"
@@ -116,7 +124,7 @@ import { NotificationDto } from '../../../models/notificationModels';
     </div>
     <div
       *ngIf="logoutPopup"
-      class="backdrop-blur-xs z-20 absolute top-0 left-0 w-full h-full flex justify-center items-center transition-opacity duration-300"
+      class="backdrop-blur-xs z-20 shadow-md absolute top-0 left-0 w-full h-full md:min-h-[100vh] flex justify-center items-center transition-opacity duration-300"
       [ngClass]="{ 'opacity-0': !logoutPopup, 'opacity-100': logoutPopup }"
     >
       <div class="w-full min-h-screen flex justify-center items-center">
@@ -152,6 +160,8 @@ import { NotificationDto } from '../../../models/notificationModels';
         </div>
       </div>
     </div>
+
+    <div class="" *ngIf="userRequestVisible"></div>
   </div>`,
   styleUrl: './navbar.component.less',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -175,6 +185,7 @@ export class NavbarComponent implements OnDestroy, OnInit {
   isMobile = window.innerWidth < 770;
 
   notificationVisible: boolean = false;
+  userRequestVisible: boolean = false;
   showLogoutDialog: boolean = false;
   visibleSetting: boolean = false;
   logoutPopup: boolean = false;
@@ -184,6 +195,11 @@ export class NavbarComponent implements OnDestroy, OnInit {
   unreadCount: number = 0;
 
   notificationLists: NotificationDto[] = [];
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
 
   constructor() {
     this.currentUrl = this.router.url;

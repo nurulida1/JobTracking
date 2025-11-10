@@ -9,6 +9,8 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 import { filter, Subject, takeUntil } from 'rxjs';
+import { UserRole } from '../../enum/enum';
+import { UserService } from '../../../services/userService.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -32,6 +34,7 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
       <!-- 📄 QUOTATIONS -->
       <a
+        *ngIf="role === 'Admin' || role === 'Approver'"
         [routerLink]="'/quotation'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
@@ -47,6 +50,7 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
       <!-- 📄 PURCHASE ORDERS -->
       <a
+        *ngIf="role === 'Admin' || role === 'Approver'"
         [routerLink]="'/purchase-order'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
@@ -62,6 +66,7 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
       <!-- ⚙️ JOBS -->
       <a
+        *ngIf="role !== 'Guest'"
         [routerLink]="'/job'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
@@ -77,6 +82,7 @@ import { filter, Subject, takeUntil } from 'rxjs';
 
       <!-- 🚚 DELIVERY -->
       <a
+        *ngIf="role !== 'Guest'"
         [routerLink]="'/delivery'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
@@ -89,6 +95,21 @@ import { filter, Subject, takeUntil } from 'rxjs';
       >
         <i class="pi pi-truck !text-xl"></i>
       </a>
+
+      <a
+        *ngIf="role === 'Admin'"
+        [routerLink]="'/request-role'"
+        [ngClass]="{
+          'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
+            isActive('/request-role'),
+          'text-gray-400 hover:bg-white/10': !isActive('/request-role')
+        }"
+        class="flex items-center space-x-3 p-3 rounded-xl transition duration-200"
+        pTooltip="Request Role"
+        tooltipPosition="right"
+      >
+        <i class="pi pi-users !text-xl"></i>
+      </a>
     </div>
   `,
   styleUrl: './sidebar.component.less',
@@ -96,13 +117,16 @@ import { filter, Subject, takeUntil } from 'rxjs';
 })
 export class SidebarComponent implements OnDestroy {
   private readonly router = inject(Router);
+  private readonly userService = inject(UserService);
 
   private destroy$ = new Subject<void>();
 
   currentUrl: string = '';
+  role: UserRole | null = null;
 
   constructor() {
     this.currentUrl = this.router.url;
+    this.role = this.userService.currentUser?.role ?? UserRole.Guest;
     this.router.events
       .pipe(
         filter(

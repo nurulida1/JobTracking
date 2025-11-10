@@ -2,9 +2,13 @@ import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { catchError, Observable, retry, throwError } from 'rxjs';
 import { environment } from '../../environments/environment.development';
-import { Role, RoleRequest } from '../models/RoleModel';
+import { DashboardSummaryRole, Role, RoleRequest } from '../models/RoleModel';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { BaseResponse } from '../shared/helpers/helpers';
+import {
+  BaseResponse,
+  GridifyQueryExtend,
+  PagingContent,
+} from '../shared/helpers/helpers';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +20,31 @@ export class RoleService {
     private http: HttpClient,
     private messageService: MessageService
   ) {}
+
+  GetMany(query: GridifyQueryExtend): Observable<PagingContent<Role>> {
+    let params = new HttpParams()
+      .set('page', query.Page.toString())
+      .set('pageSize', query.PageSize.toString());
+
+    if (query.Select) {
+      params = params.set('select', query.Select);
+    }
+    if (query.OrderBy) {
+      params = params.set('orderBy', query.OrderBy);
+    }
+    if (query.Filter) {
+      params = params.set('filter', query.Filter);
+    }
+    if (query.Includes) {
+      params = params.set('includes', query.Includes);
+    }
+
+    return this.http
+      .get<PagingContent<Role>>(this.url + '/GetMany', {
+        params,
+      })
+      .pipe(retry(1), catchError(this.handleError('GetMany')));
+  }
 
   RequestRole(
     request: RoleRequest
@@ -34,6 +63,12 @@ export class RoleService {
       .pipe(retry(1), catchError(this.handleError('PendingRequests')));
   }
 
+  DashboardSummary(): Observable<DashboardSummaryRole> {
+    return this.http
+      .get<DashboardSummaryRole>(this.url + '/DashboardSummary')
+      .pipe(retry(1), catchError(this.handleError('DashboardSummary')));
+  }
+
   Approve(id: number): Observable<BaseResponse> {
     const params = new HttpParams().append('Id', id);
     return this.http
@@ -41,10 +76,12 @@ export class RoleService {
       .pipe(retry(1), catchError(this.handleError('Approve')));
   }
 
-  Reject(id: number): Observable<BaseResponse> {
-    const params = new HttpParams().append('Id', id);
+  Reject(id: number, reason?: string): Observable<BaseResponse> {
+    let params = new HttpParams().set('id', id.toString());
+    if (reason) params = params.set('reason', reason);
+
     return this.http
-      .put<BaseResponse>(`${this.url}/Reject`, params)
+      .put<BaseResponse>(`${this.url}/Reject`, {}, { params })
       .pipe(retry(1), catchError(this.handleError('Reject')));
   }
 

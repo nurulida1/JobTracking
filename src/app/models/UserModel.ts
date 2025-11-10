@@ -1,9 +1,10 @@
-import { RoleRequestStatus, UserRole } from '../shared/enum/enum';
+import { UserRole } from '../shared/enum/enum';
 import { BaseModel } from './BaseModel';
 
 export interface UserDto extends BaseModel {
   fullName: string;
   email: string;
+  username: string;
   role: UserRole;
   phoneNumber: string;
   isActive: boolean;
@@ -28,9 +29,15 @@ export interface ChangePasswordRequest {
 
 export interface RegisterRequest {
   fullName: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
   phoneNumber?: string;
   role?: UserRole;
+}
+
+export interface UserCredential {
+  username: string;
+  password: string;
 }

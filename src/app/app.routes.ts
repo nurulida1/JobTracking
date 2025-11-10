@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { SplashScreen } from './components/splashScreen/splashScreen';
+import { Unauthorized } from './common/components/unauthorized/unauthorized';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '' },
@@ -62,6 +63,22 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () =>
       import('./components/settings/settings').then((m) => m.Settings),
+  },
+  {
+    path: 'change-password',
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import(
+            './components/change-password-internal/change-password-internal'
+          ).then((m) => m.ChangePasswordInternal),
+      },
+    ],
   },
   {
     path: 'quotation',
@@ -127,4 +144,21 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: 'request-role',
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadChildren: () =>
+          import('./components/request-role/request-role-rounting.module').then(
+            (m) => m.RequestRoleRoutingModule
+          ),
+      },
+    ],
+  },
+  { path: 'unauthorized', component: Unauthorized },
 ];

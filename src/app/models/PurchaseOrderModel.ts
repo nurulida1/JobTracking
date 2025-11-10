@@ -3,33 +3,33 @@ import { BaseModel } from './BaseModel';
 import { QuotationDto } from './QuotationModel';
 
 export interface PurchaseOrderDto extends BaseModel {
-  PO: string;
-  PODate: Date;
-  POReceivedDate: Date;
-  POAmount: number;
-  Status: PurchaseOrderStatus;
-  QuotationId: number;
-  Quotation: QuotationDto;
-  Site?: string;
-  Project?: string;
-  Client?: string;
-  Description?: string;
-  Remarks?: string;
+  po: string;
+  poDate: Date;
+  poReceivedDate: Date;
+  poAmount: number;
+  status: PurchaseOrderStatus;
+  quotationId: number;
+  quotation: QuotationDto;
+  site?: string;
+  project?: string;
+  client?: string;
+  description?: string;
+  remarks?: string;
 }
 
 export interface CreatePurchaseOrderRequest {
-  PO: string;
-  PODate: Date;
-  POReceivedDate: Date;
-  POAmount: number;
-  QuotationId: number;
-  Site?: string;
-  Project?: string;
-  Client?: string;
-  Description?: string;
-  Remarks?: string;
+  po: string;
+  poDate: Date;
+  poReceivedDate: Date;
+  poAmount: number;
+  quotationId: number;
+  site?: string;
+  project?: string;
+  client?: string;
+  description?: string;
+  remarks?: string;
 }
 
 export interface UpdatePurchaseOrderRequest extends CreatePurchaseOrderRequest {
-  Id: number;
+  id: number;
 }

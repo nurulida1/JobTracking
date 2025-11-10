@@ -49,40 +49,6 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
       <div class="tracking-wider text-xl xl:text-3xl text-shadow-lg">
         Let's Get Started !
       </div>
-      <!-- <div class="flex flex-col gap-5 pt-10 w-full px-20">
-        <div class="flex flex-row items-center gap-3">
-          <div
-            class="w-10 h-10 inset-shadow-sm inset-shadow-black/40 rounded-full bg-[#224f8a] flex items-center justify-center"
-          >
-            <i class="pi pi-receipt !text-shadow-lg"></i>
-          </div>
-          <div class="text-white/90 text-shadow-lg tracking-wider text-sm">
-            Create, review, and approve job quotations effortlessly.
-          </div>
-        </div>
-
-        <div class="flex flex-row items-center gap-3 pl-5">
-          <div
-            class="w-10 h-10 inset-shadow-sm  inset-shadow-black/40 rounded-full bg-[#224f8a] flex items-center justify-center"
-          >
-            <i class="pi pi-briefcase !text-shadow-lg"></i>
-          </div>
-          <div class="text-white/90 text-shadow-lg tracking-wider text-sm">
-            Assign and monitor ongoing jobs with real-time progress.
-          </div>
-        </div>
-
-        <div class="flex flex-row items-center gap-3 pl-10 pt-2">
-          <div
-            class="w-10 h-10 inset-shadow-sm  inset-shadow-black/40 rounded-full bg-[#224f8a] flex items-center justify-center"
-          >
-            <i class="pi pi-truck !text-shadow-lg"></i>
-          </div>
-          <div class="text-white/90 text-shadow-lg tracking-wider text-sm">
-            Track deliveries and ensure clients receive their orders on time.
-          </div>
-        </div>
-      </div> -->
     </div>
     <div
       class="relative py-7 w-full bg-[var(--p-button-info-background)]"
@@ -160,6 +126,25 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
             >
               <div *ngIf="FG.get('fullName')?.errors?.['required']">
                 Name is required.
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 mt-5">
+            <div class="text-gray-500 tracking-wider font-semibold md:text-sm">
+              Username
+            </div>
+            <input
+              type="text"
+              pInputText
+              class="w-full md:!text-sm"
+              formControlName="username"
+            />
+            <div
+              *ngIf="FG.get('username')?.touched && FG.get('username')?.invalid"
+              class="text-red-500 text-xs"
+            >
+              <div *ngIf="FG.get('username')?.errors?.['required']">
+                Username is required.
               </div>
             </div>
           </div>
@@ -256,7 +241,7 @@ import { ValidateAllFormFields } from '../../shared/helpers/helpers';
          opacity-0 animate-fadeIn"
     >
       <div
-        class="flex flex-col items-center justify-center rounded-2xl bg-gray-200 drop-shadow-lg py-3 w-[80%]"
+        class="flex flex-col items-center justify-center rounded-2xl bg-gray-200 drop-shadow-lg py-3 w-[80%] md:w-[40%]"
       >
         <img src="assets/success.png" alt="" class="w-[80px]" />
         <div class="pt-4 font-semibold tracking-widest text-lg">
@@ -299,6 +284,7 @@ export class Register implements OnDestroy {
   constructor() {
     this.FG = new FormGroup({
       fullName: new FormControl<string | null>(null, Validators.required),
+      username: new FormControl<string | null>(null, Validators.required),
       email: new FormControl<string | null>(null, [
         Validators.required,
         Validators.email,

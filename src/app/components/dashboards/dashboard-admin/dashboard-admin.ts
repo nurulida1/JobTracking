@@ -223,13 +223,13 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
           <div class="flex justify-between p-4">
             <div>
               <div class="text-2xl font-semibold tracking-widest text-gray-700">
-                323.95
+                0.00
               </div>
               <div class="text-sm text-gray-400">Personnel Working ($)</div>
             </div>
             <div>
               <div class="text-2xl font-semibold tracking-widest text-gray-700">
-                18,903.38
+                0.00
               </div>
               <div class="text-sm text-gray-400">Total Material Cost ($)</div>
             </div>

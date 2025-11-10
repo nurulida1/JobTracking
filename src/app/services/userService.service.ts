@@ -186,8 +186,8 @@ export class UserService {
 
   logout(): void {
     this.setCurrentUser(null);
-    localStorage.removeItem('access_token');
-    this.router.navigate(['/login']);
+    localStorage.removeItem('jwtToken');
+    this.router.navigate(['/']);
   }
 
   private handleError = (context: string) => (error: any) => {
