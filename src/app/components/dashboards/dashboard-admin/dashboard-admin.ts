@@ -6,16 +6,17 @@ import {
   inject,
   Input,
 } from '@angular/core';
-import { DashboardCount } from '../../../models/AppModels';
+import { DashboardSummary } from '../../../models/AppModels';
 import { ChartModule } from 'primeng/chart';
 import { RouterLink } from '@angular/router';
 import { LoadingService } from '../../../services/loading.service';
 import { AppService } from '../../../services/appService.service';
 import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { TableModule } from 'primeng/table';
 
 @Component({
   selector: 'app-dashboard-admin',
-  imports: [CommonModule, ChartModule, RouterLink],
+  imports: [CommonModule, ChartModule, RouterLink, TableModule],
   template: `
     <div class="w-full pt-10 pb-20 md:p-2">
       <div class="grid md:grid-cols-2 gap-4 h-[45%] md:px-10">
@@ -35,7 +36,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
                 <div
                   class="text-4xl font-semibold text-white text-shadow-md tracking-widest"
                 >
-                  {{ dashboardCount.quotations.pending }}
+                  {{ dashboardCount?.summary?.quotations?.pending }}
                 </div>
                 <div
                   class="pt-2 text-xs text-white text-shadow-lg tracking-wider"
@@ -49,7 +50,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
                 <div
                   class="text-4xl font-semibold tracking-widest text-white text-shadow-lg"
                 >
-                  {{ dashboardCount.quotations.approved }}
+                  {{ dashboardCount?.summary?.quotations?.approved }}
                 </div>
                 <div
                   class="pt-2 text-xs text-white text-shadow-lg tracking-wider"
@@ -63,7 +64,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
                 <div
                   class="text-4xl font-semibold tracking-widest text-white text-shadow-lg"
                 >
-                  {{ dashboardCount.quotations.rejected }}
+                  {{ dashboardCount?.summary?.quotations?.rejected }}
                 </div>
                 <div
                   class="pt-2 text-xs text-white text-shadow-lg tracking-wider"
@@ -98,7 +99,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
           <h3
             class="text-lg font-semibold bg-pink-400 text-white tracking-widest text-shadow-md text-shadow-black/30 w-full text-center rounded-t-xl px-4 py-3"
           >
-            Job Tracking
+            Work Orders (WO)
           </h3>
           <div
             class="bg-gray-50 rounded-b-xl pt-10 md:pt-0 flex flex-col gap-30 items-center justify-center w-full h-full"
@@ -133,7 +134,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
                 />
               </svg>
               <div class="absolute text-5xl font-bold">
-                {{ dashboardCount.jobs.active }}
+                {{ dashboardCount?.summary?.workOrders }}
               </div>
             </div>
             <div class="flex justify-around w-full text-sm pb-2">
@@ -166,7 +167,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
           <div class="flex space-x-8 p-4">
             <div class="text-center flex-1 border-r border-gray-300">
               <div class="text-4xl font-semibold tracking-widest text-gray-600">
-                {{ dashboardCount.jobs.active }}
+                {{ dashboardCount?.summary?.jobs?.active }}
               </div>
               <div class="text-sm text-gray-400">Active Jobs</div>
             </div>
@@ -174,13 +175,13 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
               <div
                 class="text-4xl font-semibold tracking-widest text-yellow-400"
               >
-                {{ dashboardCount.jobs.pending }}
+                {{ dashboardCount?.summary?.jobs?.pending }}
               </div>
               <div class="text-sm text-gray-400">Pending</div>
             </div>
             <div class="text-center flex-1 border-l border-gray-300">
               <div class="text-4xl font-semibold tracking-widest text-red-400">
-                {{ dashboardCount.jobs.delayed }}
+                {{ dashboardCount?.summary?.jobs?.delayed }}
               </div>
               <div class="text-sm text-gray-400">Delayed</div>
             </div>
@@ -213,35 +214,91 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
         </div>
 
         <div
-          class="bg-gray-50 rounded-xl border border-gray-300 shadow-md flex flex-col"
+          class="bg-gray-50 rounded-xl border border-gray-300 shadow-md flex flex-col md:mb-0 mb-10"
         >
           <h3
             class="px-4 py-3 shadow-sm rounded-t-xl text-lg font-semibold mb-3 text-white text-shadow-lg bg-yellow-400"
           >
-            Work Orders (WO)
+            Role Requests
           </h3>
-          <div class="flex justify-between p-4">
-            <div>
-              <div class="text-2xl font-semibold tracking-widest text-gray-700">
-                0.00
+          <div class="flex justify-center p-4 gap-2">
+            <div class="p-2 flex-1 bg-white shadow-md rounded-md">
+              <div class="flex flex-row items-center border justify-between">
+                <div
+                  class="text-4xl font-semibold tracking-widest text-yellow-500 text-shadow-md"
+                >
+                  {{ dashboardCount?.summary?.roleRequests?.pending }}
+                </div>
+                <div class="flex flex-col justify-between">
+                  <i class="pi pi-hourglass"></i>
+                  <div
+                    class="text-right text-xs tracking-wider pt-1 text-gray-400"
+                  >
+                    Pending
+                  </div>
+                </div>
               </div>
-              <div class="text-sm text-gray-400">Personnel Working ($)</div>
             </div>
-            <div>
-              <div class="text-2xl font-semibold tracking-widest text-gray-700">
-                0.00
+            <div class="p-2 flex-1 bg-white shadow-md rounded-md">
+              <div
+                class="text-4xl font-semibold tracking-widest text-green-500 text-shadow-md"
+              >
+                {{ dashboardCount?.summary?.roleRequests?.approved }}
               </div>
-              <div class="text-sm text-gray-400">Total Material Cost ($)</div>
+              <div class="text-right text-xs tracking-wider pt-1 text-gray-400">
+                Approved
+              </div>
             </div>
           </div>
+          <div class="px-4 pb-3">
+            <div class="border-b border-gray-200"></div>
+          </div>
+          <div class="px-4 pb-3 text-sm tracking-wider text-gray-600">
+            Top 3 Pending Role Requests
+          </div>
           <div class="px-4 pb-4 flex-grow">
-            <div
-              class="w-full h-full bg-gray-200 rounded-lg border border-white/10 p-2 flex items-center justify-center"
+            <p-table
+              dataKey="id"
+              [value]="dashboardCount?.roleRequestsDetails || []"
+              size="small"
+              [tableStyle]="{ 'min-width': '10rem' }"
+              tableStyleClass="!w-full border border-gray-200"
+              styleClass="!w-full"
             >
-              <span class="text-gray-500 text-xs"
-                >Work Order Chart Placeholder</span
-              >
-            </div>
+              <ng-template #header>
+                <tr>
+                  <th
+                    class="!bg-yellow-400 !text-white !text-shadow-md !text-center text-xs tracking-wider"
+                  >
+                    Username
+                  </th>
+                  <th
+                    class="!bg-yellow-400 !text-white !text-shadow-md !text-center text-xs tracking-wider"
+                  >
+                    Requested Role
+                  </th>
+                  <th
+                    class="!bg-yellow-400 !text-white !text-shadow-md !text-center text-xs tracking-wider"
+                  >
+                    Requested At
+                  </th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-data>
+                <tr>
+                  <td class="!text-center text-xs">{{ data.userFullName }}</td>
+                  <td class="!text-center text-xs">{{ data.requestedRole }}</td>
+                  <td class="!text-center text-xs">
+                    {{ data.createdAt | date : 'dd/MM/YYYY' }}
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr colspan="100%">
+                  <td>No requested role</td>
+                </tr>
+              </ng-template>
+            </p-table>
           </div>
         </div>
       </div>
@@ -251,11 +308,7 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardAdmin {
-  @Input() dashboardCount: DashboardCount = {
-    quotations: { pending: 0, approved: 0, rejected: 0 },
-    jobs: { active: 0, pending: 0, delayed: 0 },
-    workOrders: 0,
-  };
+  @Input() dashboardCount: DashboardSummary | null = null;
 
   @Input() quotationChartData: any;
   @Input() quotationChartOptions: any;
@@ -270,7 +323,7 @@ export class DashboardAdmin {
 
   ngOnInit(): void {
     const requests: any = {
-      dashboardCount: this.appService.GetDashboardCount(),
+      dashboardCount: this.appService.GetDashboardAdmin(),
       quotationChart: this.appService.QuotationChart(),
     };
 

@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 import { SpeedDialModule } from 'primeng/speeddial';
 import { TooltipModule } from 'primeng/tooltip';
-import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { LoadingService } from '../../../services/loading.service';
 import { DashboardCount } from '../../../models/AppModels';
 import { Subject, Subscription, takeUntil } from 'rxjs';
@@ -72,7 +71,15 @@ import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
                 ></app-dashboard-technician>
               </ng-container>
 
-              <!-- APPROVER VIEW -->
+              <!-- APPROVER && PLANNER VIEW -->
+              <ng-container *ngSwitchCase="'Planner'">
+                <app-dashboard-approver
+                  [dashboardCount]="dashboardCount"
+                  [quotationChartData]="quotationChartData"
+                  [quotationChartOptions]="quotationChartOptions"
+                ></app-dashboard-approver>
+              </ng-container>
+
               <ng-container *ngSwitchCase="'Approver'">
                 <app-dashboard-approver
                   [dashboardCount]="dashboardCount"
@@ -110,11 +117,7 @@ export class Dashboard implements OnInit, OnDestroy {
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
   private notificationSub!: Subscription;
 
-  dashboardCount: DashboardCount = {
-    quotations: { pending: 0, approved: 0, rejected: 0 },
-    jobs: { active: 0, pending: 0, delayed: 0 },
-    workOrders: 0,
-  };
+  dashboardCount: any;
   notifications: { message: string; time: Date }[] = [];
 
   quotationChartData: any;
@@ -129,11 +132,11 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   constructor() {
-    this.role = this.userService.currentUser?.role ?? UserRole.Guest;
+    this.role = this.userService.currentUser?.userRole ?? UserRole.Guest;
 
     this.FG = new FormGroup({
-      userId: new FormControl<number | null>(
-        this.userService.currentUser?.id ?? null,
+      userId: new FormControl<string | null>(
+        this.userService.currentUser?.userId ?? null,
         Validators.required
       ),
       requestedRole: new FormControl<string | null>(null, Validators.required),

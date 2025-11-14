@@ -3,7 +3,8 @@ import { BaseModel } from './BaseModel';
 import { QuotationDto } from './QuotationModel';
 
 export interface PurchaseOrderDto extends BaseModel {
-  po: string;
+  purchaseOrderId: string;
+  purchaseOrderNo: string;
   poDate: Date;
   poReceivedDate: Date;
   poAmount: number;

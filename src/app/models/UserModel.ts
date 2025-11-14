@@ -41,3 +41,14 @@ export interface UserCredential {
   username: string;
   password: string;
 }
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  username: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt?: Date;
+  userId: string;
+  userRole: UserRole;
+}

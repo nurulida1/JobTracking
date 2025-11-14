@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../environments/environment.development';
-import { DashboardCount } from '../models/AppModels';
+import { DashboardCount, DashboardSummary } from '../models/AppModels';
 import { Observable, retry, catchError, throwError } from 'rxjs';
 import { JobDto, JobTaskResponse } from '../models/JobModels';
 
@@ -17,6 +17,12 @@ export class AppService {
     private messageService: MessageService
   ) {}
 
+  GetDashboardAdmin(): Observable<DashboardSummary> {
+    return this.http
+      .get<DashboardSummary>(this.url + '/dashboardSummary', {})
+      .pipe(retry(1), catchError(this.handleError('GetDashboardAdmin')));
+  }
+
   GetDashboardCount(): Observable<DashboardCount> {
     return this.http
       .get<DashboardCount>(this.url + '/dashboardCount', {})
@@ -29,10 +35,10 @@ export class AppService {
       .pipe(retry(1), catchError(this.handleError('QuotationChart')));
   }
 
-  TodayTasks(userId: number): Observable<JobTaskResponse> {
+  TodayTasks(userId: string): Observable<JobTaskResponse> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
-      .get<JobTaskResponse>(`https://192.168.1.77:5000/technician/todayTasks`, {
+      .get<JobTaskResponse>(`https://192.168.1.69:5000/technician/todayTasks`, {
         params,
       })
       .pipe(retry(1), catchError(this.handleError('TodayTasks')));

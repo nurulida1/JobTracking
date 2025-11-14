@@ -16,7 +16,8 @@ export function AuthInterceptorFn(
   const router = inject(Router);
 
   // ✅ Get token from localStorage
-  const token = localStorage.getItem('jwtToken');
+  const token =
+    localStorage.getItem('jwtToken') ?? sessionStorage.getItem('jwtToken');
 
   // ✅ Clone request and attach Authorization header if token exists
   const clonedReq = token
@@ -30,7 +31,8 @@ export function AuthInterceptorFn(
       if (error.status === 401 || error.status === 403) {
         // Optional: clear invalid token
         localStorage.removeItem('jwtToken');
-        router.navigate(['/']);
+        sessionStorage.removeItem('jwtToken');
+        router.navigate(['/login']);
       }
       return throwError(() => error);
     })

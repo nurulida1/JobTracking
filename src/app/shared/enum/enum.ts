@@ -5,8 +5,7 @@ export enum DeliveryStatus {
 
 export enum PurchaseOrderStatus {
   Draft = 'Draft',
-  Approved = 'Approved',
-  Rejected = 'Rejected',
+  Submitted = 'Submitted',
   Cancelled = 'Cancelled',
 }
 
@@ -19,6 +18,7 @@ export enum QuotationStatus {
 export enum UserRole {
   Admin = 'Admin',
   Approver = 'Approver',
+  Planner = 'Planner',
   Technician = 'Technician',
   Guest = 'Guest',
 }
@@ -45,7 +45,8 @@ export enum JobPriority {
 
 export enum JobStatus {
   Pending = 'Pending',
-  Active = 'Active',
-  Delayed = 'Delayed',
+  InProgress = 'InProgress',
+  OnHold = 'OnHold',
   Completed = 'Completed',
+  Cancelled = 'Cancelled',
 }

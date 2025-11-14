@@ -69,19 +69,19 @@ export class RoleService {
       .pipe(retry(1), catchError(this.handleError('DashboardSummary')));
   }
 
-  Approve(id: number): Observable<BaseResponse> {
-    const params = new HttpParams().append('Id', id);
+  Approve(id: string): Observable<BaseResponse> {
+    // Matches: PUT /api/Role/Approve/{id}
     return this.http
-      .put<BaseResponse>(`${this.url}/Approve`, params)
+      .put<BaseResponse>(`${this.url}/Approve/${id}`, {}) // empty body required for PUT
       .pipe(retry(1), catchError(this.handleError('Approve')));
   }
 
-  Reject(id: number, reason?: string): Observable<BaseResponse> {
-    let params = new HttpParams().set('id', id.toString());
-    if (reason) params = params.set('reason', reason);
+  Reject(id: string, reason?: string): Observable<BaseResponse> {
+    // Matches: PUT /api/Role/Reject/{id}?reason=...
+    let params = reason ? new HttpParams().set('reason', reason) : undefined;
 
     return this.http
-      .put<BaseResponse>(`${this.url}/Reject`, {}, { params })
+      .put<BaseResponse>(`${this.url}/Reject/${id}`, {}, { params })
       .pipe(retry(1), catchError(this.handleError('Reject')));
   }
 

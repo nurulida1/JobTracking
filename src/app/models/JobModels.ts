@@ -1,16 +1,18 @@
-import { JobPriority, JobStatus } from '../shared/enum/enum';
+import { JobPriority, JobStatus, UserRole } from '../shared/enum/enum';
 import { BaseModel } from './BaseModel';
 import { UserDto } from './UserModel';
-import { WorkOrderDto } from './WorkOrderModel';
+import { WorkOrderDto, WorkOrderTechnician } from './WorkOrderModel';
 
 export interface JobDto extends BaseModel {
-  id: number;
-  workOrderId: number;
+  jobNo: string;
+  workOrderId: string;
   workOrder: WorkOrderDto;
-  assignedToUserId?: number;
-  assignedToUser?: UserDto;
-  assignedByUserId?: number;
-  assignedByUser: UserDto;
+  workOrderTechnicianId?: string;
+  workOrderTechnician?: WorkOrderTechnician;
+  assigntoUserId?: string;
+  assignedToUsername: string;
+  assignByUserId?: string;
+  assignedByUsername: string;
   description?: string;
   priority: JobPriority;
   dueDate?: Date;
@@ -21,10 +23,26 @@ export interface JobDto extends BaseModel {
   status: JobStatus;
 }
 
+export interface UpdateJobRequest {
+  id: string;
+  description?: string;
+  priority: string;
+  dueDate?: Date;
+  remarks?: string;
+}
+
 export interface JobTaskResponse {
   success: boolean;
   userId: number;
   date: Date;
-  taskCount: number;
-  tasks: JobDto[]; // ✅ array if multiple tasks
+  taskCount: TaskCount;
+  tasks: JobDto[];
+  userRole: UserRole;
+}
+
+export interface TaskCount {
+  active: number;
+  completed: number;
+  delyaed: number;
+  pending: number;
 }

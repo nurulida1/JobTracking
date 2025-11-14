@@ -34,7 +34,7 @@ import { UserService } from '../../../services/userService.service';
 
       <!-- 📄 QUOTATIONS -->
       <a
-        *ngIf="role === 'Admin' || role === 'Approver'"
+        *ngIf="role === 'Admin' || role === 'Approver' || role === 'Planner'"
         [routerLink]="'/quotation'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
@@ -50,7 +50,7 @@ import { UserService } from '../../../services/userService.service';
 
       <!-- 📄 PURCHASE ORDERS -->
       <a
-        *ngIf="role === 'Admin' || role === 'Approver'"
+        *ngIf="role === 'Admin' || role === 'Approver' || role === 'Planner'"
         [routerLink]="'/purchase-order'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
@@ -62,6 +62,22 @@ import { UserService } from '../../../services/userService.service';
         tooltipPosition="right"
       >
         <i class="pi pi-credit-card !text-xl"></i>
+      </a>
+
+      <!-- 📄 WORK ORDERS -->
+      <a
+        *ngIf="role === 'Admin' || role === 'Approver' || role === 'Planner'"
+        [routerLink]="'/work-order'"
+        [ngClass]="{
+          'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
+            isActive('/work-order'),
+          'text-gray-400 hover:bg-white/10': !isActive('/work-order')
+        }"
+        class="flex items-center space-x-3 p-3 rounded-xl transition duration-200"
+        pTooltip="Work Orders"
+        tooltipPosition="right"
+      >
+        <i class="pi pi-clipboard !text-xl"></i>
       </a>
 
       <!-- ⚙️ JOBS -->
@@ -98,14 +114,14 @@ import { UserService } from '../../../services/userService.service';
 
       <a
         *ngIf="role === 'Admin'"
-        [routerLink]="'/request-role'"
+        [routerLink]="'/role-management'"
         [ngClass]="{
           'bg-blue-600/10 text-cyan-500 text-shadow-md text-black/50 inset-shadow-sm inset-shadow-black/50':
-            isActive('/request-role'),
-          'text-gray-400 hover:bg-white/10': !isActive('/request-role')
+            isActive('/role-management'),
+          'text-gray-400 hover:bg-white/10': !isActive('/role-management')
         }"
         class="flex items-center space-x-3 p-3 rounded-xl transition duration-200"
-        pTooltip="Request Role"
+        pTooltip="Role Management"
         tooltipPosition="right"
       >
         <i class="pi pi-users !text-xl"></i>
@@ -126,7 +142,7 @@ export class SidebarComponent implements OnDestroy {
 
   constructor() {
     this.currentUrl = this.router.url;
-    this.role = this.userService.currentUser?.role ?? UserRole.Guest;
+    this.role = this.userService.currentUser?.userRole ?? UserRole.Guest;
     this.router.events
       .pipe(
         filter(

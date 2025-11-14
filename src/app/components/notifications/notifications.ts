@@ -85,10 +85,10 @@ export class Notifications implements OnInit, OnDestroy {
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   notificationsList: NotificationDto[] | null = null;
-  userId: number | null = null;
+  userId: string | null = null;
 
   ngOnInit(): void {
-    this.userId = this.userService.currentUser?.id ?? null;
+    this.userId = this.userService.currentUser?.userId ?? null;
     if (!this.userId) return;
 
     this.notificationService.message$
@@ -110,7 +110,7 @@ export class Notifications implements OnInit, OnDestroy {
     this.loadingService.start();
 
     this.notificationService
-      .GetNotifications(this.userId ?? 0)
+      .GetNotifications(this.userId ?? '')
       .pipe(
         takeUntil(this.ngUnsubscribe),
         switchMap((res) => {

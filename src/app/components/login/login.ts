@@ -7,7 +7,6 @@ import {
   inject,
   OnDestroy,
   OnInit,
-  signal,
 } from '@angular/core';
 import {
   FormControl,
@@ -19,12 +18,13 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { LoadingService } from '../../services/loading.service';
 import { Subject, takeUntil } from 'rxjs';
-import { UserService } from '../../services/userService.service';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ValidateAllFormFields } from '../../shared/helpers/helpers';
 import { AuthService } from '../../services/authService';
+import { AccountService } from '../../services/AccountService.service';
+import { UserService } from '../../services/userService.service';
 
 @Component({
   selector: 'app-login',
@@ -82,7 +82,7 @@ import { AuthService } from '../../services/authService';
         <div
           class="p-4 rounded-b rounded-full absolute -top-6 left-0 right-0 w-full bg-white z-20 "
         ></div>
-        <div class="flex flex-col items-start w-full gap-1 md:px-30">
+        <div class="flex flex-col items-start w-full gap-1 md:px-10 lg:px-30">
           <div
             class="font-semibold text-3xl tracking-widest pl-2 text-cyan-600"
           >
@@ -92,10 +92,10 @@ import { AuthService } from '../../services/authService';
             Let's get to work!
           </div>
         </div>
-        <div class="md:px-30">
+        <div class="md:px-10 lg:px-30 w-full">
           <div class="border-b border-gray-200 w-full mt-2 mb-2"></div>
         </div>
-        <div class="w-full p-2 rounded-md md:px-30">
+        <div class="w-full p-2 rounded-md md:px-10 lg:px-30">
           <div [formGroup]="FG">
             <div class="flex flex-col gap-2">
               <div
@@ -162,7 +162,7 @@ import { AuthService } from '../../services/authService';
             </div>
           </div>
         </div>
-        <div class="w-full px-2 pt-6 md:px-30">
+        <div class="w-full px-2 pt-6 md:px-10 lg:px-30">
           <p-button
             (onClick)="onLogin()"
             label="Login"
@@ -237,18 +237,18 @@ import { AuthService } from '../../services/authService';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Login implements OnDestroy, OnInit {
-  isMobile = window.innerWidth < 770;
-
   private readonly loadingService = inject(LoadingService);
+  private readonly accountService = inject(AccountService);
+  private readonly userService = inject(UserService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
-  private readonly userService = inject(UserService);
-  private readonly authService = inject(AuthService);
+
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   FG!: FormGroup;
   error: boolean = false;
   errorMessage: string = '';
+  isMobile = window.innerWidth < 770;
 
   @HostListener('window:resize', [])
   onResize() {
@@ -272,36 +272,42 @@ export class Login implements OnDestroy, OnInit {
   }
 
   onLogin() {
-    if (this.FG.valid) {
-      this.loadingService.start();
-      this.authService
-        .login(this.FG.get('username')?.value, this.FG.get('password')?.value)
-        .pipe(takeUntil(this.ngUnsubscribe))
-        .subscribe({
-          next: (res) => {
-            if (res.success) {
-              setTimeout(() => {
-                this.loadingService.stop();
-                this.router.navigate(['/dashboard']);
-              }, 1500);
-            } else {
-              this.loadingService.stop();
-              this.error = true;
-              this.errorMessage = res.message ?? '';
-              this.cdr.detectChanges();
-            }
-          },
-          error: (err) => {
-            this.loadingService.stop();
-            this.error = true;
-            this.errorMessage =
-              err?.error?.message ||
-              'An unexpected error occurred. Please try again.';
-            this.cdr.detectChanges();
-          },
-        });
+    if (!this.FG.valid) {
+      ValidateAllFormFields(this.FG);
+      return;
     }
-    ValidateAllFormFields(this.FG);
+
+    this.loadingService.start();
+
+    const username = this.FG.get('username')?.value;
+    const password = this.FG.get('password')?.value;
+    const rememberMe = this.FG.get('rememberMe')?.value;
+
+    this.accountService
+      .Login(username, password)
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe({
+        next: (res) => {
+          this.loadingService.stop();
+
+          if (res.success) {
+            // ✅ Set currentUser in UserService
+            this.userService.setCurrentUser(res, rememberMe);
+
+            // Navigate only after currentUser is set
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.error = true;
+            this.errorMessage = res.message ?? 'Login failed';
+          }
+        },
+        error: (err) => {
+          this.loadingService.stop();
+          this.error = true;
+          this.errorMessage =
+            err?.error?.message ?? 'An unexpected error occurred';
+        },
+      });
   }
 
   ngOnDestroy(): void {

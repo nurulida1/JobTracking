@@ -29,7 +29,13 @@ import { Router } from '@angular/router';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { ConfirmationService } from 'primeng/api';
-import { DeliveryStatus } from '../../../shared/enum/enum';
+import {
+  DeliveryStatus,
+  JobPriority,
+  JobStatus,
+} from '../../../shared/enum/enum';
+import { Tooltip } from 'primeng/tooltip';
+import { query } from '@angular/animations';
 
 @Component({
   selector: 'app-job-view',
@@ -41,6 +47,7 @@ import { DeliveryStatus } from '../../../shared/enum/enum';
     ButtonModule,
     DatePickerModule,
     TableModule,
+    Tooltip,
   ],
   template: `<div
     class="relative w-full px-3 md:pt-5 md:px-6 bg-cover bg-center flex flex-col min-h-[98vh] md:min-h-[91.8vh] bg-white/60"
@@ -68,12 +75,14 @@ import { DeliveryStatus } from '../../../shared/enum/enum';
         placeholder="Select range date"
         inputStyleClass="!text-sm !tracking-wide !w-[200px]"
         (onSelect)="SelectRangeDate($event)"
+        [disabled]="PagingSignal().totalElements === 0"
       ></p-datepicker>
       <p-button
         *ngIf="isMobile"
         icon="pi pi-calendar"
         styleClass="!bg-white !border-gray-300 !border-2 !text-blue-500"
         (onClick)="displayCalendar()"
+        [disabled]="PagingSignal().totalElements === 0"
       ></p-button>
     </div>
     <div
@@ -81,7 +90,13 @@ import { DeliveryStatus } from '../../../shared/enum/enum';
     >
       <div
         *ngFor="
-          let status of ['All', 'Active', 'Pending', 'Delayed', 'Completed']
+          let status of [
+            'All',
+            'InProgress',
+            'Pending',
+            'Completed',
+            'Cancelled'
+          ]
         "
         (click)="FilterStatus(status)"
         [ngClass]="{
@@ -95,204 +110,78 @@ import { DeliveryStatus } from '../../../shared/enum/enum';
       </div>
     </div>
     <div class="border-b border-gray-300 mt-2"></div>
-    <div *ngIf="!isMobile" class="w-full">
-      <p-table
-        #fTable
-        dataKey="id"
-        styleClass="!w-full"
-        tableStyleClass="!w-full border border-gray-200"
-        [tableStyle]="{ 'min-width': '50rem' }"
-        [value]="PagingSignal().data"
-        [paginator]="true"
-        [rows]="Query.PageSize"
-        [totalRecords]="PagingSignal().totalElements"
-        [rowsPerPageOptions]="[10, 20, 30, 50]"
-        size="small"
-        [lazy]="true"
-        (onLazyLoad)="NextPage($event)"
-      >
-        <ng-template #header>
-          <tr>
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
-            >
-              Priority
-            </th>
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
-            >
-              Record No
-            </th>
-
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
-            >
-              Work Order ID
-            </th>
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
-            >
-              Assigned To
-            </th>
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
-            >
-              Due Date
-            </th>
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
-            >
-              Status
-            </th>
-            <th
-              class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
-            >
-              Action
-            </th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-data>
-          <tr>
-            <td class="!text-center !text-sm !border-gray-200">
-              <p-tag
-                [value]="data.priority"
-                severity="warn"
-                styleClass="!text-xs !px-4"
-              ></p-tag>
-            </td>
-            <td class="!text-center !text-sm !border-gray-200">
-              {{ data.recordNo }}
-            </td>
-            <td class="!text-center !text-sm !border-gray-200">
-              {{ data.workOrderId }}
-            </td>
-            <td class="!text-center !text-sm !border-gray-200">
-              {{ data.assignedToUser?.fullName }}
-            </td>
-            <td class="!text-center !text-sm !border-gray-200">
-              {{ data.dueDate | date : 'dd/MM/YYYY' }}
-            </td>
-            <td class="!text-center !text-sm !border-gray-200">
-              <p-tag
-                styleClass="!tracking-wider !text-xs !px-4 !rounded-full"
-                [value]="data.status"
-                [severity]="SeverityStatus(data.status)"
-              ></p-tag>
-            </td>
-            <td
-              class="!text-center !text-sm flex flex-row justify-center items-center !border-gray-200"
-            >
-              <p-button
-                *ngIf="data.status === 0"
-                (onClick)="ActionClick(data.id, 'approve', $event)"
-                styleClass="!text-xs"
-                [text]="true"
-                severity="success"
-                pTooltip="Approve"
-                tooltipPosition="top"
-                ><ng-template pTemplate="icon">
-                  <i class="pi pi-check-circle !text-[15px]"></i> </ng-template
-              ></p-button>
-              <p-button
-                *ngIf="data.status === 0"
-                (onClick)="ActionClick(data.id, 'reject', $event)"
-                styleClass="!text-xs"
-                [text]="true"
-                severity="danger"
-                pTooltip="Reject"
-                tooltipPosition="top"
-                ><ng-template pTemplate="icon">
-                  <i class="pi pi-times-circle !text-[15px]"></i> </ng-template
-              ></p-button>
-              <p-button
-                (onClick)="ActionClick(data.id, 'edit')"
-                styleClass="!text-xs"
-                [text]="true"
-                severity="info"
-                pTooltip="Edit"
-                tooltipPosition="top"
-                ><ng-template pTemplate="icon">
-                  <i class="pi pi-pencil !text-[15px]"></i> </ng-template
-              ></p-button>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-          <tr>
-            <td
-              colspan="100%"
-              class="!w-full !text-center !text-gray-500 !text-sm"
-            >
-              No data found.
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-    <div class="flex flex-col pt-4" *ngIf="isMobile">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 gap-2 pt-4"
+    >
       <ng-container *ngIf="PagingSignal().totalElements > 0; else noData">
-        <div
-          (click)="DetailsClick()"
-          class="p-2 rounded-sm bg-white border border-gray-300 flex flex-col"
-        >
-          <div class="flex flex-row justify-between">
-            <div class="flex flex-col">
-              <div class="flex flex-row items-start gap-2">
-                <div
-                  class="border rounded-full px-3 py-1 text-sm border-gray-300"
-                >
-                  #JO001
+        <ng-container *ngFor="let data of PagingSignal().data">
+          <div
+            class="p-2 border-t-8 border rounded-md border-gray-300 bg-white"
+            [ngClass]="{
+              'border-t-yellow-500': data.priority === 'Medium',
+              'border-t-blue-500': data.priority === 'Low',
+              'border-t-red-500': data.priority === 'High',
+              'border-t-orange-500': data.priority === 'Critical'
+            }"
+          >
+            <div class="flex flex-col h-full justify-between">
+              <div class="flex flex-col">
+                <div class="flex flex-row items-center justify-between">
+                  <div
+                    class="border px-5 py-0.5 text-xs rounded-full text-white text-shadow-md tracking-wider"
+                    [ngClass]="{
+                      'bg-blue-400': data.status === 'InProgress',
+                      'bg-orange-400': data.status === 'OnHold',
+                      'bg-red-400': data.status === 'Cancelled',
+                      'bg-green-400': data.status === 'Completed'
+                    }"
+                  >
+                    {{ data.status }}
+                  </div>
+                  <div class="text-gray-600 text-xs tracking-wider">
+                    Due:
+                    <b>{{
+                      (data.dueDate | date : 'MMMM dd, YYYY') ?? 'N/A'
+                    }}</b>
+                  </div>
                 </div>
+
                 <div
-                  class="bg-blue-200 text-blue-700 text-sm gap-1 rounded-full px-3 py-1"
+                  class="pt-5 text-sm font-semibold tracking-wider text-gray-700"
                 >
-                  <div>In Progress</div>
+                  #{{ data.jobNo }}
+                </div>
+                <div class="py-3 text-xs text-gray-500 tracking-wider">
+                  {{ data.description }}
                 </div>
               </div>
-              <div class="pt-2 text-sm tracking-wider text-gray-800">
-                Inspect, and troubleshoot the cctv, fix any indentified
-                problems.
+              <div class="flex flex-col">
+                <div
+                  class="border-b border-dashed border-gray-300 mt-2 mb-2"
+                ></div>
+                <div class="flex flex-row gap-3 items-center justify-end">
+                  <i
+                    (click)="ActionClick(data.id, 'view', data)"
+                    class="pi pi-eye !text-gray-400 hover:!text-gray-500 cursor-pointer"
+                    pTooltip="View"
+                    tooltipPosition="top"
+                  ></i>
+                  <i
+                    (click)="ActionClick(data.id, 'edit', data)"
+                    class="pi pi-pencil !text-sm !text-blue-400 hover:!text-blue-500 cursor-pointer"
+                    pTooltip="Update"
+                    tooltipPosition="top"
+                  ></i>
+                </div>
               </div>
             </div>
-            <div
-              class="rounded-md px-3 bg-gray-300/30 p-2 flex flex-col justify-center items-center gap-1"
-            >
-              <div class="text-sm text-gray-400">Aug</div>
-              <div class="font-semibold tracking-wider">14</div>
-            </div>
-          </div>
-          <div class="border-b border-gray-200 my-3"></div>
-          <div class="flex flex-row items-center gap-2">
-            <div
-              class="flex flex-row items-center text-blue-500 justify-center border rounded-full w-6 h-6"
-            >
-              <i class="pi pi-map-marker !text-xs"></i>
-            </div>
-            <div class="text-sm">YL Systems Sdn Bhd</div>
-          </div>
-          <div class="mt-3 gap-2 justify-center flex flex-row items-center">
-            <div class="flex-1">
-              <p-button
-                severity="info"
-                label="Start Job"
-                icon="pi pi-play"
-                styleClass="!tracking-wide !text-sm !px-4 !py-1 !rounded-lg !w-full"
-              ></p-button>
-            </div>
-            <div class="flex-1">
-              <p-button
-                severity="danger"
-                label="Stop Job"
-                icon="pi pi-stop"
-                styleClass="!tracking-wide !text-sm !px-4 !py-1 !rounded-lg !w-full"
-              ></p-button>
-            </div>
-          </div>
-        </div>
-      </ng-container>
+          </div> </ng-container
+      ></ng-container>
     </div>
     <ng-template #noData>
-      <div class="pt-6 tracking-wider text-sm w-full text-center" *ngIf="">
+      <div
+        class="pt-6 tracking-wider text-sm w-full text-center flex flex-col items-center justify-center text-gray-500"
+      >
         <div class="flex justify-center items-center pb-3">
           <img src="assets/happy.png" alt="" class="w-[30px]" />
         </div>
@@ -317,83 +206,49 @@ import { DeliveryStatus } from '../../../shared/enum/enum';
     </div>
     <div
       *ngIf="detailDialog"
-      class="backdrop-blur-xs absolute top-0 right-0 w-full min-h-[91.5vh] flex justify-end items-center transition-opacity duration-3000 ease-in-out"
+      class="backdrop-blur-xs absolute top-0 right-0 w-full min-h-[91.5vh] transition-opacity duration-3000 ease-in-out"
     >
       <div
-        class="relative px-4 mr-5 flex flex-col rounded-lg border border-gray-300 bg-white drop-shadow-lg p-2 w-[50%] min-h-[80vh]"
+        *ngIf="selectedJob"
+        class="w-full min-h-[91.5vh] flex flex-col justify-end items-end px-5"
       >
         <div
-          class="absolute top-3 right-3 cursor-pointer z-20"
-          (click)="detailDialog = false"
+          class="relative w-full h-[60vh] border p-2 bg-white border-gray-200 rounded-md"
         >
-          <i class="pi pi-times"></i>
-        </div>
-        <div
-          class="pt-10 border-b border-gray-200 mb-3 relative h-[100px] overflow-hidden"
-        >
-          <img
-            src="assets/delivery.png"
-            alt=""
-            class="w-[100px] absolute bottom-0 animate-slide-across"
-          />
-        </div>
-
-        <div class="flex flex-row items-center gap-3">
-          <div class="text-gray-700 tracking-wider text-xl font-bold">
-            Delivery details #D0OO1
-          </div>
           <div
-            class="px-4 py-1 font-semibold bg-violet-100 rounded-full tracking-wider text-[10px] text-violet-500 text-shadow-md"
-          >
-            SHIPPING
+            class="pi pi-times !text-gray-500 absolute top-2 right-2 cursor-pointer"
+            (click)="detailDialog = false"
+          ></div>
+          <div class="flex flex-col p-2">
+            <div class="font-semibold text-gray-500 tracking-wider text-xl">
+              #{{ selectedJob.jobNo }}
+            </div>
           </div>
         </div>
-        <div class="relative w-full border-b border-gray-200 p-4 pt-6">
-          <div class="absolute top-4 left-0">
-            <div class="flex flex-col items-center gap-2">
-              <div
-                class="w-10 h-10 border rounded-full flex items-center justify-center bg-gray-100 border-gray-300"
-              >
-                <i class="pi pi-box !text-gray-500 !text-shadow-md"></i>
-              </div>
-              <div class="flex flex-col items-center">
-                <div class="text-xs text-gray-600">Drop Date</div>
-                <div class="text-[9px] tracking-wider text-gray-500">
-                  10 Aug 2026
-                </div>
-              </div>
-            </div>
+        <!-- <div
+          *ngIf="selectedJob"
+          class="relative px-4 mr-5 flex flex-col rounded-lg border border-gray-300 bg-white drop-shadow-lg p-2 w-full min-h-[50vh]"
+        >
+          <div
+            class="absolute top-3 right-3 cursor-pointer z-20"
+            (click)="detailDialog = false"
+          >
+            <i class="pi pi-times"></i>
           </div>
 
-          <div class="absolute top-4 right-0">
-            <div class="flex flex-col items-center gap-2">
-              <div
-                class="w-10 h-10 border rounded-full flex items-center justify-center bg-gray-100 border-gray-300"
-              >
-                <i class="pi pi-truck !text-gray-500 !text-shadow-md"></i>
-              </div>
-              <div class="flex flex-col items-center">
-                <div class="text-xs text-gray-600">Est. Arrival</div>
-                <div class="text-[9px] tracking-wider text-gray-500">
-                  13 Aug 2026
-                </div>
-              </div>
+          <div class="flex flex-row items-center gap-3">
+            <div class="text-gray-600 tracking-wider text-xl font-bold">
+              #{{ selectedJob.jobNo }}
+            </div>
+            <div
+              class="px-4 py-1 font-semibold rounded-full text-white tracking-widest pb-1.5 text-[10px] text-shadow-lg text-shadow-black/30"
+              [ngClass]="{ 'bg-blue-400': selectedJob.priority === 'Low' }"
+            >
+              {{ selectedJob.priority }}
             </div>
           </div>
-        </div>
-        <!-- <div class="pt-1 text-gray-500 text-xs tracking-wider">
-          Date: 20 Aug 2026
+          <div class="w-full mt-2 mb-2 border-b border-gray-200"></div>
         </div> -->
-        <div class="flex flex-row items-center gap-2 pt-7">
-          <div class="pt-10 text-gray-500 text-xs tracking-wide">
-            Received By:
-          </div>
-          <div class="pt-10 text-gray-700 font-semibold text-xs tracking-wide">
-            Nurul
-          </div>
-        </div>
-        <div class="pt-3 text-gray-500 text-xs underline">Remarks</div>
-        <div class="text-gray-700 text-xs pt-1">~ details</div>
       </div>
     </div>
   </div>`,
@@ -404,7 +259,6 @@ export class JobView implements OnInit, OnDestroy {
   @ViewChild('fTable') fTable?: Table;
 
   private readonly notificationService = inject(NotificationService);
-  private readonly confirmationService = inject(ConfirmationService);
   private readonly loadingService = inject(LoadingService);
   private readonly jobService = inject(JobService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -417,6 +271,8 @@ export class JobView implements OnInit, OnDestroy {
 
   Query: GridifyQueryExtend = {} as GridifyQueryExtend;
   PagingSignal = signal<PagingContent<JobDto>>({} as PagingContent<JobDto>);
+
+  selectedJob: JobDto | null = null;
 
   search: string = '';
   filterStatus: string = 'All';
@@ -440,7 +296,7 @@ export class JobView implements OnInit, OnDestroy {
     this.Query.Filter = null;
     this.Query.Select = null;
     this.Query.OrderBy = 'CreatedAt';
-    this.Query.Includes = null;
+    this.Query.Includes = 'WorkOrder';
   }
 
   ngOnInit(): void {
@@ -453,7 +309,7 @@ export class JobView implements OnInit, OnDestroy {
         }
       });
 
-    if (this.isMobile) this.GetData();
+    this.GetData();
   }
 
   GetData() {
@@ -539,34 +395,18 @@ export class JobView implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  DetailsClick() {
-    this.router.navigate(['/job/details']);
-  }
-
-  ActionClick(id: number, type: string, event?: Event) {
+  ActionClick(id: string, type: string, data?: any) {
     if (type === 'edit') {
-      this.router.navigate(['/job/details'], { queryParams: { id } });
+      this.router.navigate(['/job/forms'], { queryParams: { id } });
       return;
     }
 
-    this.confirmationService.confirm({
-      target: event?.target as EventTarget,
-      message: 'Are you sure that you want to proceed?',
-      header: 'Confirmation',
-      closable: true,
-      closeOnEscape: true,
-      icon: 'pi pi-exclamation-triangle',
-      rejectButtonProps: {
-        label: 'Cancel',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Confirm',
-      },
-      accept: () => {},
-      reject: () => {},
-    });
+    if (type === 'view') {
+      this.selectedJob = data;
+      this.detailDialog = true;
+      this.cdr.detectChanges();
+      return;
+    }
   }
 
   displayCalendar() {
@@ -594,12 +434,25 @@ export class JobView implements OnInit, OnDestroy {
     }
   }
 
-  SeverityStatus(status: DeliveryStatus) {
+  SeverityStatus(status: JobStatus) {
     switch (status) {
-      case DeliveryStatus.Delivered:
+      case JobStatus.Completed:
         return 'success';
-      case DeliveryStatus.Pending:
+      case JobStatus.Pending:
         return 'warn';
+      case JobStatus.InProgress:
+        return 'info';
+      default:
+        return 'danger';
+    }
+  }
+
+  SeverityPriority(priority: JobPriority) {
+    switch (priority) {
+      case JobPriority.Medium:
+        return 'warn';
+      case JobPriority.Low:
+        return 'info';
       default:
         return 'danger';
     }

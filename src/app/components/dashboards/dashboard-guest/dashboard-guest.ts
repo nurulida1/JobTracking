@@ -53,6 +53,7 @@ import { InputTextModule } from 'primeng/inputtext';
             placeholder="Select a role"
             appendTo="body"
             [options]="[
+              { label: 'Planner', value: 'Planner' },
               { label: 'Approver', value: 'Approver' },
               { label: 'Technician', value: 'Technician' }
             ]"
@@ -105,8 +106,8 @@ export class DashboardGuest {
 
   constructor() {
     this.FG = new FormGroup({
-      userId: new FormControl<number | null>(
-        this.userService.currentUser?.id ?? null,
+      userId: new FormControl<string | null>(
+        this.userService.currentUser?.userId ?? null,
         Validators.required
       ),
       requestedRole: new FormControl<string | null>(null, Validators.required),

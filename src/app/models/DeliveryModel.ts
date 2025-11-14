@@ -4,6 +4,7 @@ import { PurchaseOrderDto } from './PurchaseOrderModel';
 
 export interface DeliveryDto extends BaseModel {
   recordNo: string;
+  deliveryNo: string;
   purchaseOrderId: number;
   purchaseOrder: PurchaseOrderDto;
   deliveryETA?: Date;

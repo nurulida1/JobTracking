@@ -2,6 +2,7 @@ import { QuotationStatus } from '../shared/enum/enum';
 import { BaseModel } from './BaseModel';
 
 export interface QuotationDto extends BaseModel {
+  quotationId: string;
   quotationNo: string;
   vendorName: string;
   receivedDate: Date;

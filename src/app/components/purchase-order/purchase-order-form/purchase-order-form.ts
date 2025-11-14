@@ -10,7 +10,6 @@ import {
 import {
   FormControl,
   FormGroup,
-  FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -56,23 +55,31 @@ import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
                   <label
                     for="first-name"
                     class="tracking-wider block text-sm/6 font-medium text-gray-600"
-                    >PO <span class="text-red-500">*</span></label
+                    >Purchase Order No
+                    <span class="text-red-500">*</span></label
                   >
                   <div class="mt-2">
                     <input
                       id="first-name"
                       type="text"
-                      formControlName="po"
+                      pInputText
+                      [disabled]="true"
+                      formControlName="purchaseOrderNo"
                       name="first-name"
                       autocomplete="given-name"
-                      class="block w-full border border-gray-300 rounded-md px-3 py-1.5 text-base !tracking-wider focus:outline-2 focus:-outline-offset-1 focus:outline-cyan-500 sm:text-sm/6"
+                      class="block w-full border !text-sm border-gray-300 rounded-md px-3 py-1.5 text-base !tracking-wider focus:outline-2 focus:-outline-offset-1 focus:outline-cyan-500 sm:text-sm/6"
                     />
                     <div
-                      *ngIf="FG.get('po')?.touched && FG.get('po')?.invalid"
+                      *ngIf="
+                        FG.get('purchaseOrderNo')?.touched &&
+                        FG.get('purchaseOrderNo')?.invalid
+                      "
                       class="pt-1 text-red-500 text-xs"
                     >
-                      <div *ngIf="FG.get('po')?.errors?.['required']">
-                        PO is required.
+                      <div
+                        *ngIf="FG.get('purchaseOrderNo')?.errors?.['required']"
+                      >
+                        Purchase Order No is required.
                       </div>
                     </div>
                   </div>
@@ -287,7 +294,10 @@ export class PurchaseOrderForm implements OnDestroy, OnInit {
 
     this.FG = new FormGroup({
       id: new FormControl<number | null>({ value: null, disabled: true }),
-      po: new FormControl<string | null>(null, Validators.required),
+      purchaseOrderNo: new FormControl<string | null>(
+        null,
+        Validators.required
+      ),
       poDate: new FormControl<Date | null>(null, Validators.required),
       poReceivedDate: new FormControl<Date | null>(null),
       poAmount: new FormControl<number | null>(null),

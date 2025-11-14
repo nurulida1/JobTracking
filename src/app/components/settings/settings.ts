@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -13,6 +14,7 @@ import { UserService } from '../../services/userService.service';
 import { LoadingService } from '../../services/loading.service';
 import { Subject } from 'rxjs';
 import { DeliveryRoutingModule } from '../delivery/delivery-rounting.module';
+import { UserRole } from '../../shared/enum/enum';
 
 @Component({
   selector: 'app-settings',
@@ -47,7 +49,6 @@ import { DeliveryRoutingModule } from '../delivery/delivery-rounting.module';
         </div>
         <div
           class="p-3 pt-5 pb-2 flex flex-row items-center gap-3 text-gray-700"
-          [routerLink]="'/change-password-internal'"
         >
           <div
             class="bg-white/30 shadow-md w-10 h-10 flex items-center justify-center rounded-full"
@@ -136,7 +137,19 @@ export class Settings implements OnInit, OnDestroy {
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   userData: any | null = null;
+  role: UserRole | null = null;
+
   logoutPopup: boolean = false;
+  isMobile = window.innerWidth < 770;
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
+
+  constructor() {
+    this.role = this.userService.currentUser?.userRole ?? UserRole.Guest;
+  }
 
   ngOnInit(): void {
     this.userData = this.userService.currentUser;

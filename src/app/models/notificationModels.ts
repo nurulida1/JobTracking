@@ -5,5 +5,7 @@ export interface NotificationDto extends BaseModel {
   type?: string;
   link?: string;
   isRead: boolean;
-  userId?: number;
+  userId?: string;
+  createdBy?: number;
+  roleId?: string;
 }

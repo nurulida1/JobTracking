@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -26,6 +27,8 @@ import { TagModule } from 'primeng/tag';
 import { DeliveryStatus } from '../../../shared/enum/enum';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
+import { DeliveryRoutingModule } from '../delivery-rounting.module';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-delivery-view',
@@ -38,6 +41,7 @@ import { ButtonModule } from 'primeng/button';
     TagModule,
     ButtonModule,
     TableModule,
+    RouterLink,
   ],
   template: `<div
     class="relative w-full bg-cover bg-center flex items-center justify-center bg-white/60"
@@ -50,17 +54,30 @@ import { ButtonModule } from 'primeng/button';
       >
         Delivery Tracking
       </div>
-      <div class="w-full relative">
-        <input
-          type="text"
-          pInputText
-          class="w-full !text-sm !tracking-wide"
-          placeholder="Search by your tracking number"
-        />
-        <i class="pi pi-search absolute top-3 right-3 !text-gray-600"></i>
+      <div class="w-full flex flex-row items-center md:gap-2">
+        <div class="w-full relative">
+          <input
+            type="text"
+            pInputText
+            class="w-full !text-sm !tracking-wide"
+            placeholder="Search by your tracking number"
+          />
+          <i class="pi pi-search absolute top-3 right-3 !text-gray-600"></i>
+        </div>
+        <p-button
+          *ngIf="!isMobile"
+          [routerLink]="'/delivery/form'"
+          label="Add New Delivery"
+          severity="info"
+          styleClass="flex items-center gap-2 !text-xs md:!text-sm !tracking-wide whitespace-nowrap"
+        >
+          <ng-template pTemplate="icon">
+            <i class="pi pi-plus !text-xs md:!text-sm"></i>
+          </ng-template>
+        </p-button>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 pt-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 pt-4">
         <div
           class="flex-1 p-3 bg-white border shadow-md border-gray-200 rounded-md h-[100px] flex justify-center items-center"
         >
@@ -76,7 +93,7 @@ import { ButtonModule } from 'primeng/button';
             <div
               class="bg-gray-100 rounded-full p-3 inset-shadow-sm inset-shadow-black/30"
             >
-              <img src="assets/box.png" alt="" class="w-[60px]" />
+              <img src="assets/box.png" alt="" class="w-[40px] md:w-[60px]" />
             </div>
           </div>
         </div>
@@ -97,7 +114,11 @@ import { ButtonModule } from 'primeng/button';
             <div
               class="bg-gray-100 rounded-full p-3 inset-shadow-sm inset-shadow-black/30"
             >
-              <img src="assets/pending-delivery.png" alt="" class="w-[60px]" />
+              <img
+                src="assets/pending-delivery.png"
+                alt=""
+                class="w-[40px] md:w-[60px]"
+              />
             </div>
           </div>
         </div>
@@ -118,7 +139,28 @@ import { ButtonModule } from 'primeng/button';
             <div
               class="bg-gray-100 rounded-full p-4 inset-shadow-sm inset-shadow-black/30"
             >
-              <img src="assets/delivered.png" alt="" class="w-[50px]" />
+              <img
+                src="assets/delivered.png"
+                alt=""
+                class="w-[40px] md:w-[60px]"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          *ngIf="isMobile"
+          class="flex-1 p-3 bg-white border shadow-md border-gray-200 rounded-md h-[100px] flex justify-center items-center"
+        >
+          <div class="flex flex-row items-center justify-between px-2 w-full">
+            <div class="font-bold text-xs text-gray-600 tracking-widest">
+              Add New Delivery
+            </div>
+            <div
+              class="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center inset-shadow-sm inset-shadow-black/30"
+            >
+              <i
+                class="pi pi-plus !text-[12px] !font-bold !text-blue-500 !text-shadow-md"
+              ></i>
             </div>
           </div>
         </div>
@@ -395,6 +437,12 @@ export class DeliveryView implements OnInit, OnDestroy {
   } | null = null;
 
   search: string = '';
+  isMobile = window.innerWidth < 770;
+
+  @HostListener('window:resize', [])
+  onResize() {
+    this.isMobile = window.innerWidth < 770;
+  }
 
   constructor() {
     this.Query.Page = 1;

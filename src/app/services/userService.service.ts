@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   ChangePasswordRequest,
   LoginRequest,
+  LoginResponse,
   RegisterRequest,
   ResetPasswordRequest,
   UserDto,
@@ -30,7 +31,7 @@ import { Router } from '@angular/router';
 })
 export class UserService {
   url = environment.ApiBaseUrl + '/Users';
-  private currentUserSubject = new BehaviorSubject<UserDto | null>(null);
+  private currentUserSubject = new BehaviorSubject<LoginResponse | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
@@ -44,33 +45,35 @@ export class UserService {
     }
   }
 
-  get currentUser(): UserDto | null {
+  get currentUser(): LoginResponse | null {
     return this.currentUserSubject.value;
   }
 
-  setCurrentUser(user: UserDto | null): void {
+  setCurrentUser(user: LoginResponse | null, rememberMe: boolean = false) {
     this.currentUserSubject.next(user);
-
-    if (user) {
+    if (rememberMe && user) {
+      localStorage.setItem('jwtToken', user.accessToken);
       localStorage.setItem('currentUser', JSON.stringify(user));
     } else {
-      localStorage.removeItem('currentUser');
+      if (user?.accessToken)
+        sessionStorage.setItem('jwtToken', user.accessToken);
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
     }
   }
 
   GetMany(query: GridifyQueryExtend): Observable<PagingContent<UserDto>> {
     let params = new HttpParams()
       .set('page', query.Page.toString())
-      .set('page_size', query.PageSize.toString());
+      .set('pageSize', query.PageSize.toString());
 
     if (query.Select) {
-      params = params.set('Select', query.Select);
+      params = params.set('select', query.Select);
     }
     if (query.OrderBy) {
-      params = params.set('OrderBy', query.OrderBy);
+      params = params.set('orderBy', query.OrderBy);
     }
     if (query.Filter) {
-      params = params.set('Filter', query.Filter);
+      params = params.set('filter', query.Filter);
     }
 
     return this.http
@@ -115,29 +118,19 @@ export class UserService {
       .pipe(retry(1), catchError(this.handleError('GetProfile')));
   }
 
-  Login(request: LoginRequest): Observable<{
-    success: boolean;
-    token: string;
-    user: UserDto;
-    message?: string;
-  }> {
-    return this.http
-      .post<{
-        success: boolean;
-        token: string;
-        user: UserDto;
-        message?: string;
-      }>(`${this.url}/Login`, request)
-      .pipe(
-        retry(1),
-        tap((res) => {
-          if (res.success && res.user) {
-            this.setCurrentUser(res.user);
-          }
-        }),
-        catchError(this.handleError('Login'))
-      );
-  }
+  // Login(request: LoginRequest): Observable<LoginResponse> {
+  //   return this.http
+  //     .post<LoginResponse>(`${this.url}/Login`, request)
+  //     .pipe(
+  //       retry(1),
+  //       tap((res) => {
+  //         if (res.success && res.user) {
+  //           this.setCurrentUser(res.user);
+  //         }
+  //       }),
+  //       catchError(this.handleError('Login'))
+  //     );
+  // }
 
   Register(
     request: RegisterRequest

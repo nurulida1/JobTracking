@@ -8,55 +8,50 @@ import { UserRole } from '../../enum/enum';
   selector: 'app-footer',
   imports: [CommonModule, RouterModule],
   template: `<div
-    class="rounded-2xl border px-5 py-4 flex flex-row items-center text-gray-500 text-xs lg:text-sm bg-white border-t border-gray-200 shadow-md"
-    [ngClass]="role === 'Guest' ? 'justify-evenly' : 'justify-between'"
+    class="rounded-2xl border px-5 text-gray-500 text-xs lg:text-sm bg-white border-t border-gray-200 shadow-md relative"
+    [ngClass]="{ 'pt-3': role === 'Admin' || role === 'Planner' }"
   >
     <div
-      [routerLink]="'/dashboard'"
-      routerLinkActive="!text-blue-500"
-      class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
+      *ngIf="getOverflowMenus().length > 0"
+      class="flex justify-center cursor-pointer"
+      (click)="toggleOverflow()"
     >
-      <i class="pi pi-home !text-2xl"></i>
-      <div>Home</div>
+      <i
+        class="pi"
+        [ngClass]="showOverflowMenu ? 'pi-angle-down' : 'pi-angle-up'"
+      ></i>
+    </div>
+
+    <div class="flex flex-row items-center justify-between py-4">
+      <ng-container *ngFor="let menu of getMainMenus()">
+        <div
+          [routerLink]="menu.link"
+          routerLinkActive="!text-blue-500"
+          class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
+        >
+          <i class="pi" [ngClass]="menu.icon + ' !text-2xl'"></i>
+          <div>{{ menu.label }}</div>
+        </div>
+      </ng-container>
     </div>
 
     <div
-      *ngIf="role === 'Admin' || role === 'Approver'"
-      [routerLink]="'/quotation'"
-      routerLinkActive="!text-blue-500"
-      class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
+      class="flex flex-row items-center justify-center gap-10 transition-all duration-300 overflow-hidden"
+      [ngClass]="{
+        'max-h-0': !showOverflowMenu,
+        'max-h-24 pb-3': showOverflowMenu
+      }"
     >
-      <i class="pi pi-receipt !text-2xl"></i>
-      <div>Quotation</div>
-    </div>
-
-    <div
-      *ngIf="role !== 'Guest'"
-      [routerLink]="'/job'"
-      routerLinkActive="!text-blue-500"
-      class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
-    >
-      <i class="pi pi-briefcase !text-2xl"></i>
-      <div>Job</div>
-    </div>
-
-    <div
-      *ngIf="role !== 'Guest'"
-      [routerLink]="'/delivery'"
-      routerLinkActive="!text-blue-500"
-      class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
-    >
-      <i class="pi pi-truck !text-2xl"></i>
-      <div>Delivery</div>
-    </div>
-
-    <div
-      [routerLink]="'/settings'"
-      routerLinkActive="!text-blue-500"
-      class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
-    >
-      <i class="pi pi-cog !text-2xl"></i>
-      <div>Settings</div>
+      <ng-container *ngFor="let menu of getOverflowMenus()">
+        <div
+          [routerLink]="menu.link"
+          routerLinkActive="!text-blue-500"
+          class="w-12 h-12 flex flex-col justify-center items-center rounded-full transition-colors"
+        >
+          <i class="pi" [ngClass]="menu.icon + ' !text-2xl'"></i>
+          <div>{{ menu.label }}</div>
+        </div>
+      </ng-container>
     </div>
   </div> `,
   styleUrl: './footer.component.less',
@@ -66,8 +61,82 @@ export class FooterComponent {
   private readonly userService = inject(UserService);
 
   role: UserRole | null = null;
+  showOverflowMenu: boolean = false;
+
+  menus = [
+    {
+      label: 'Home',
+      icon: 'pi-home',
+      link: '/dashboard',
+      roles: ['Guest', 'Admin', 'Approver', 'Technician', 'Planner'],
+    },
+    {
+      label: 'To-Do',
+      icon: 'pi-list',
+      link: '/to-do',
+      roles: ['Admin', 'Technician'],
+    },
+    {
+      label: 'Quotation',
+      icon: 'pi-receipt',
+      link: '/quotation',
+      roles: ['Admin', 'Approver', 'Planner'],
+    },
+    {
+      label: 'PO',
+      icon: 'pi-credit-card',
+      link: '/purchase-order',
+      roles: ['Admin', 'Approver', 'Planner'],
+    },
+    {
+      label: 'WO',
+      icon: 'pi-file',
+      link: '/settings',
+      roles: ['Admin', 'Approver', 'Planner'],
+    },
+    {
+      label: 'Job',
+      icon: 'pi-briefcase',
+      link: '/job',
+      roles: ['Admin', 'Approver', 'Technician', 'Planner'],
+    },
+    {
+      label: 'Delivery',
+      icon: 'pi-truck',
+      link: '/delivery',
+      roles: ['Admin', 'Approver', 'Technician', 'Planner'],
+    },
+    {
+      label: 'Roles',
+      icon: 'pi-users',
+      link: '/role-management',
+      roles: ['Admin', 'Approver'],
+    },
+    {
+      label: 'Settings',
+      icon: 'pi-cog',
+      link: '/settings',
+      roles: ['Guest', 'Admin', 'Approver', 'Technician', 'Planner'],
+    },
+  ];
 
   constructor() {
-    this.role = this.userService.currentUser?.role ?? UserRole.Guest;
+    this.role = this.userService.currentUser?.userRole ?? UserRole.Guest;
+  }
+
+  toggleOverflow() {
+    this.showOverflowMenu = !this.showOverflowMenu;
+  }
+
+  getVisibleMenus(): any[] {
+    return this.menus.filter((menu) => menu.roles.includes(this.role ?? ''));
+  }
+
+  getMainMenus(): any[] {
+    return this.getVisibleMenus().slice(0, 5);
+  }
+
+  getOverflowMenus(): any[] {
+    return this.getVisibleMenus().slice(5);
   }
 }

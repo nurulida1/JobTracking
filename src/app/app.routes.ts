@@ -122,7 +122,7 @@ export const routes: Routes = [
       {
         path: '',
         loadChildren: () =>
-          import('./components/job/job-rounting.module').then(
+          import('./components/job/job-routing.module').then(
             (m) => m.JobRoutingModule
           ),
       },
@@ -145,7 +145,7 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'request-role',
+    path: 'role-management',
     loadComponent: () =>
       import('./shared/components/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -157,6 +157,36 @@ export const routes: Routes = [
           import('./components/request-role/request-role-rounting.module').then(
             (m) => m.RequestRoleRoutingModule
           ),
+      },
+    ],
+  },
+  {
+    path: 'work-order',
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadChildren: () =>
+          import('./components/work-order/work-order-routing.module').then(
+            (m) => m.WorkOrderRoutingModule
+          ),
+      },
+    ],
+  },
+  {
+    path: 'to-do',
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./components/to-do-view/to-do-view').then((m) => m.ToDoView),
       },
     ],
   },

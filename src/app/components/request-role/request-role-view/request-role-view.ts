@@ -11,16 +11,13 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DataViewModule } from 'primeng/dataview';
 import { InputTextModule } from 'primeng/inputtext';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { RoleService } from '../../../services/roleService';
-import { ConfirmationService } from 'primeng/api';
 import { LoadingService } from '../../../services/loading.service';
 import { NotificationService } from '../../../services/notificationService.service';
 import { finalize, Subject, Subscription, takeUntil } from 'rxjs';
@@ -57,7 +54,7 @@ import { RoleRequestStatus } from '../../../shared/enum/enum';
             >
               Role Management
             </h3>
-            <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="grid md:grid-cols-3 gap-2 mb-4">
               <div
                 class=" px-3 flex flex-row gap-4 shadow-lg bg-gradient-to-r from-[#9B7DE2] to-[#c8b8eb] border border-gray-200 flex-1 rounded-md"
               >
@@ -275,6 +272,7 @@ import { RoleRequestStatus } from '../../../shared/enum/enum';
                 [value]="PagingSignal().data"
                 [rows]="Query.PageSize"
                 [paginator]="true"
+                styleClass="!border !border-gray-200"
               >
                 <ng-template #list let-items>
                   <div class="grid grid-cols-12 gap-4 grid-nogutter">
@@ -292,37 +290,43 @@ import { RoleRequestStatus } from '../../../shared/enum/enum';
                           class="flex flex-col gap-1 tracking-wider text-gray-700"
                         >
                           <div
-                            class="flex flex-row items-center justify-between pb-3"
+                            class="flex flex-row items-center justify-end pb-3"
                           >
-                            <span class="font-medium"
-                              >#{{ item.quotationNo }}</span
-                            >
                             <p-tag
                               [value]="item.status"
+                              [severity]="SeverityStatus(item.status)"
                               class="!text-xs dark:!bg-surface-900 !tracking-wider !rounded-full !px-4"
                             />
                           </div>
                           <div
                             class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
                           >
-                            <div>Vendor Name</div>
-                            <div>{{ item.vendorName }}</div>
-                          </div>
-                          <div
-                            class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
-                          >
-                            <div>Received Date</div>
-                            <div>
-                              {{ item.receivedDate | date : 'dd/MM/YYYY' }}
+                            <div>Username</div>
+                            <div class="font-bold">
+                              {{ item.user.username }}
                             </div>
                           </div>
                           <div
                             class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
                           >
-                            <div>Amount</div>
-                            <div>
-                              {{ item.quotationAmount | currency : 'RM ' }}
+                            <div>Requested Role</div>
+                            <div class="font-bold">
+                              {{ item.requestedRole }}
                             </div>
+                          </div>
+                          <div
+                            class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
+                          >
+                            <div>Requested Date</div>
+                            <div>
+                              {{ item.createdAt | date : 'dd/MM/YYYY' }}
+                            </div>
+                          </div>
+                          <div
+                            class="text-xs text-gray-600 font-thin flex flex-col gap-1"
+                          >
+                            <div>Justification:</div>
+                            <div>~ {{ item.justification }}test</div>
                           </div>
                         </div>
                         <div
@@ -364,7 +368,7 @@ import { RoleRequestStatus } from '../../../shared/enum/enum';
         *ngIf="confirmationDialog"
         class="absolute inset-0 flex items-center justify-center backdrop-blur-xs"
       >
-        <div class="bg-white/90 w-[40%] shadow-md rounded-b-lg">
+        <div class="bg-white/90 w-[40%] shadow-md rounded-lg">
           <!-- Header -->
           <div
             class="bg-blue-400 rounded-t-lg px-3 py-2 text-shadow-md text-white tracking-wider"
@@ -453,7 +457,7 @@ export class RequestRoleView implements OnInit, OnDestroy {
   type: string = '';
   search: string = '';
   reason: string = '';
-  id: number | null = null;
+  id: string | null = null;
 
   isMobile = window.innerWidth < 770;
 
@@ -587,7 +591,7 @@ export class RequestRoleView implements OnInit, OnDestroy {
     }
   }
 
-  ActionClick(id: number, type: string) {
+  ActionClick(id: string, type: string) {
     this.id = id;
     this.reason = '';
     this.type = type;

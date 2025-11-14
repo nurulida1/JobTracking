@@ -213,7 +213,7 @@ export class ChangePasswordInternal implements OnInit, OnDestroy {
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
   FG!: FormGroup;
-  userId: number | null = null;
+  userId: string | null = null;
   isMobile = window.innerWidth < 770;
 
   @HostListener('window:resize', [])
@@ -223,7 +223,7 @@ export class ChangePasswordInternal implements OnInit, OnDestroy {
 
   constructor() {
     this.FG = new FormGroup({
-      userId: new FormControl<number | null>(null, Validators.required),
+      userId: new FormControl<string | null>(null, Validators.required),
       newPassword: new FormControl<string | null>(null, Validators.required),
       confirmPassword: new FormControl<string | null>(
         null,
@@ -233,7 +233,7 @@ export class ChangePasswordInternal implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.userId = this.userService.currentUser?.id ?? null;
+    this.userId = this.userService.currentUser?.userId ?? null;
     this.FG.get('id')?.patchValue(this.userId);
   }
 

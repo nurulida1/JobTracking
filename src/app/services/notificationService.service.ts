@@ -26,7 +26,7 @@ export class NotificationService {
   public message$ = this.messageSource.asObservable();
 
   private _unreadCount$ = new BehaviorSubject<number>(0);
-  public unreadCount$ = this._unreadCount$.asObservable();
+  unreadCount$ = this._unreadCount$.asObservable();
 
   private isConnected: boolean = false;
   private hasLoadedUnread: boolean = false; // ✅ load unread only once
@@ -37,7 +37,7 @@ export class NotificationService {
   public notifications$ = this._notifications$.asObservable();
 
   url = environment.ApiBaseUrl + '/Notification';
-  private readonly baseUrl = 'https://192.168.1.77:5000/hubs/notifications';
+  private readonly baseUrl = 'https://192.168.1.69:5000/hubs/notifications';
 
   constructor(
     private zone: NgZone,
@@ -90,24 +90,19 @@ export class NotificationService {
     });
   }
 
-  /** Load unread count only once per session */
-  loadUnreadCount(userId?: number) {
-    if (this.hasLoadedUnread || !userId) return;
+  loadUnreadCount(userId: string | undefined) {
+    const params: any = {};
+    if (userId) params.userId = userId;
 
-    this.UnreadCount(userId)
-      .pipe(take(1))
+    this.http
+      .get<{ unreadCount: number }>(`${this.url}/UnreadCount`, { params })
       .subscribe((res) => {
-        if (res.success) {
-          this._unreadCount$.next(res.unreadCount);
-          this.hasLoadedUnread = true;
-        }
+        this._unreadCount$.next(res.unreadCount); // emits value immediately
       });
   }
 
   /** Refresh unread count dynamically */
-  refreshUnreadCount(userId?: number) {
-    if (!userId) return;
-
+  refreshUnreadCount(userId?: string) {
     this.UnreadCount(userId)
       .pipe(take(1))
       .subscribe((res) => {
@@ -118,7 +113,7 @@ export class NotificationService {
   }
 
   /** API Calls */
-  GetNotifications(userId: number): Observable<NotificationDto[]> {
+  GetNotifications(userId: string): Observable<NotificationDto[]> {
     if (this.notificationsLoaded && this._notifications$.value.length > 0) {
       // 🟢 Return cached data
       return of(this._notifications$.value);
@@ -152,15 +147,15 @@ export class NotificationService {
       .subscribe();
   }
 
-  MarkAllAsRead(userId: number): Observable<{ success: boolean }> {
-    let params = new HttpParams().set('userId', userId.toString());
+  MarkAllAsRead(userId: string): Observable<{ success: boolean }> {
+    let params = new HttpParams().set('userId', userId);
     return this.http
       .put<{ success: boolean }>(`${this.url}/MarkAllRead`, {}, { params })
       .pipe(retry(1), catchError(this.handleError('MarkAllAsRead')));
   }
 
   UnreadCount(
-    userId?: number
+    userId?: string
   ): Observable<{ success: boolean; unreadCount: number }> {
     const params: any = {};
     if (userId) params.userId = userId;
@@ -173,10 +168,10 @@ export class NotificationService {
       .pipe(retry(1), catchError(this.handleError('UnreadCount')));
   }
 
-  MarkRead(id: number): Observable<BaseResponse> {
-    const params = new HttpParams().append('Id', id);
+  MarkRead(id: string): Observable<BaseResponse> {
+    const params = new HttpParams().set('id', id); // lowercase 'id'
     return this.http
-      .put<BaseResponse>(`${this.url}/MarkRead`, params)
+      .put<BaseResponse>(`${this.url}/MarkRead`, {}, { params }) // empty body required for PUT
       .pipe(retry(1), catchError(this.handleError('MarkRead')));
   }
 

@@ -22,7 +22,7 @@ import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { QuotationStatus } from '../../../shared/enum/enum';
+import { QuotationStatus, UserRole } from '../../../shared/enum/enum';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +30,7 @@ import { DataViewModule } from 'primeng/dataview';
 import { NotificationService } from '../../../services/notificationService.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { UserService } from '../../../services/userService.service';
 
 @Component({
   selector: 'app-quotation-view',
@@ -57,7 +58,14 @@ import { ConfirmationService } from 'primeng/api';
             >
               Quotations Management
             </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+            <div
+              class="grid gap-2 mb-4"
+              [ngClass]="{
+                'grid-cols-2 md:grid-cols-4':
+                  role === 'Planner' || role === 'Admin',
+                'grid-cols-1 md:grid-cols-3': role !== 'Planner'
+              }"
+            >
               <div
                 class=" px-3 flex flex-row gap-4 shadow-lg bg-gradient-to-r from-[#9B7DE2] to-[#c8b8eb] border border-gray-200 flex-1 rounded-md"
               >
@@ -138,6 +146,7 @@ import { ConfirmationService } from 'primeng/api';
               </div>
 
               <div
+                *ngIf="role === 'Planner' || role === 'Admin'"
                 [routerLink]="'/quotation/form/'"
                 class=" px-3 flex flex-row gap-5 shadow-lg cursor-pointer hover:scale-102 bg-gradient-to-r from-[#F79355] to-[#f5b37e] border border-gray-200 flex-1 rounded-md"
               >
@@ -202,7 +211,12 @@ import { ConfirmationService } from 'primeng/api';
                   <ng-template #header>
                     <tr>
                       <th
-                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
+                      >
+                        Quotation ID
+                      </th>
+                      <th
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
                       >
                         Quotation No
                       </th>
@@ -212,7 +226,7 @@ import { ConfirmationService } from 'primeng/api';
                         Vendor Name
                       </th>
                       <th
-                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
                       >
                         Received Date
                       </th>
@@ -222,7 +236,7 @@ import { ConfirmationService } from 'primeng/api';
                         Amount
                       </th>
                       <th
-                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
                       >
                         Status
                       </th>
@@ -235,6 +249,9 @@ import { ConfirmationService } from 'primeng/api';
                   </ng-template>
                   <ng-template #body let-data>
                     <tr>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        {{ data.quotationId }}
+                      </td>
                       <td class="!text-center !text-sm !border-gray-200">
                         {{ data.quotationNo }}
                       </td>
@@ -254,47 +271,57 @@ import { ConfirmationService } from 'primeng/api';
                           [severity]="SeverityStatus(data.status)"
                         ></p-tag>
                       </td>
-                      <td
-                        class="!text-center !text-sm flex flex-row justify-center items-center !border-gray-200"
-                      >
-                        <p-button
-                          *ngIf="data.status === 0"
-                          (onClick)="ActionClick(data.id, 'approve', $event)"
-                          styleClass="!text-xs"
-                          [text]="true"
-                          severity="success"
-                          pTooltip="Approve"
-                          tooltipPosition="top"
-                          ><ng-template pTemplate="icon">
-                            <i
-                              class="pi pi-check-circle !text-[15px]"
-                            ></i> </ng-template
-                        ></p-button>
-                        <p-button
-                          *ngIf="data.status === 0"
-                          (onClick)="ActionClick(data.id, 'reject', $event)"
-                          styleClass="!text-xs"
-                          [text]="true"
-                          severity="danger"
-                          pTooltip="Reject"
-                          tooltipPosition="top"
-                          ><ng-template pTemplate="icon">
-                            <i
-                              class="pi pi-times-circle !text-[15px]"
-                            ></i> </ng-template
-                        ></p-button>
-                        <p-button
-                          (onClick)="ActionClick(data.id, 'edit')"
-                          styleClass="!text-xs"
-                          [text]="true"
-                          severity="info"
-                          pTooltip="Edit"
-                          tooltipPosition="top"
-                          ><ng-template pTemplate="icon">
-                            <i
-                              class="pi pi-pencil !text-[15px]"
-                            ></i> </ng-template
-                        ></p-button>
+                      <td class="!text-center !text-sm !border-gray-200">
+                        <div class="flex flex-row items-center justify-center">
+                          <p-button
+                            *ngIf="
+                              data.status === 0 &&
+                              (role === 'Approver' || role === 'Admin')
+                            "
+                            (onClick)="ActionClick(data.id, 'approve', $event)"
+                            styleClass="!text-xs"
+                            [text]="true"
+                            severity="success"
+                            pTooltip="Approve"
+                            tooltipPosition="top"
+                            ><ng-template pTemplate="icon">
+                              <i
+                                class="pi pi-check-circle !text-[15px]"
+                              ></i> </ng-template
+                          ></p-button>
+                          <p-button
+                            *ngIf="
+                              data.status === 0 &&
+                              (role === 'Approver' || role === 'Admin')
+                            "
+                            (onClick)="ActionClick(data.id, 'reject', $event)"
+                            styleClass="!text-xs"
+                            [text]="true"
+                            severity="danger"
+                            pTooltip="Reject"
+                            tooltipPosition="top"
+                            ><ng-template pTemplate="icon">
+                              <i
+                                class="pi pi-times-circle !text-[15px]"
+                              ></i> </ng-template
+                          ></p-button>
+                          <p-button
+                            *ngIf="
+                              (role === 'Planner' || role === 'Admin') &&
+                              data.status === 'Pending'
+                            "
+                            (onClick)="ActionClick(data.id, 'edit')"
+                            styleClass="!text-xs"
+                            [text]="true"
+                            severity="info"
+                            pTooltip="Edit"
+                            tooltipPosition="top"
+                            ><ng-template pTemplate="icon">
+                              <i
+                                class="pi pi-pencil !text-[15px]"
+                              ></i> </ng-template
+                          ></p-button>
+                        </div>
                       </td>
                     </tr>
                   </ng-template>
@@ -335,14 +362,20 @@ import { ConfirmationService } from 'primeng/api';
                           <div
                             class="flex flex-row items-center justify-between pb-3"
                           >
-                            <span class="font-medium"
-                              >#{{ item.quotationNo }}</span
+                            <span class="font-semibold text-sm"
+                              >#{{ item.quotationId }}</span
                             >
                             <p-tag
                               [value]="DisplayStatus(item.status)"
                               [severity]="SeverityStatus(item.status)"
                               class="!text-xs dark:!bg-surface-900 !tracking-wider !rounded-full !px-4"
                             />
+                          </div>
+                          <div
+                            class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
+                          >
+                            <div>Quotation No</div>
+                            <div>{{ item.quotationNo }}</div>
                           </div>
                           <div
                             class="text-xs text-gray-600 font-thin flex flex-row justify-between items-center"
@@ -368,22 +401,32 @@ import { ConfirmationService } from 'primeng/api';
                           </div>
                         </div>
                         <div
+                          *ngIf="item.status === 'Pending'"
                           class="border-b border-dashed border-gray-300"
                         ></div>
                         <div
                           class="flex flex-row items-center justify-end gap-3"
                         >
                           <i
-                            *ngIf="item.status === QuotationStatus.Pending"
+                            *ngIf="
+                              item.status === QuotationStatus.Pending &&
+                              role === 'Approver'
+                            "
                             (click)="ActionClick(item.id, 'reject')"
                             class="pi pi-times-circle !text-sm !text-red-500 !text-shadow-md"
                           ></i>
                           <i
-                            *ngIf="item.status === QuotationStatus.Pending"
+                            *ngIf="
+                              item.status === QuotationStatus.Pending &&
+                              role === 'Approver'
+                            "
                             (click)="ActionClick(item.id, 'approve')"
                             class="pi pi-check-circle !text-sm !text-green-500 !text-shadow-md"
                           ></i>
                           <i
+                            *ngIf="
+                              role === 'Planner' && item.status === 'Pending'
+                            "
                             (click)="ActionClick(item.id, 'edit')"
                             class="pi pi-pencil !text-sm !text-blue-500 !text-shadow-md"
                           ></i>
@@ -420,6 +463,7 @@ export class QuotationView implements OnInit, OnDestroy {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly quotationService = inject(QuotationService);
   private readonly loadingService = inject(LoadingService);
+  private readonly userService = inject(UserService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
 
@@ -438,9 +482,11 @@ export class QuotationView implements OnInit, OnDestroy {
     approved: number;
     rejected: number;
   } | null = null;
+
   search: string = '';
   QuotationStatus = QuotationStatus;
   isMobile = window.innerWidth < 770;
+  role: UserRole | null = null;
 
   @HostListener('window:resize', [])
   onResize() {
@@ -448,6 +494,8 @@ export class QuotationView implements OnInit, OnDestroy {
   }
 
   constructor() {
+    this.role = this.userService.currentUser?.userRole ?? UserRole.Guest;
+
     this.Query.Page = 1;
     this.Query.PageSize = 10;
     this.Query.OrderBy = 'CreatedAt desc';
@@ -545,6 +593,13 @@ export class QuotationView implements OnInit, OnDestroy {
 
   Search(data: string) {
     const filter = {
+      quotationId: [
+        {
+          value: data,
+          matchMode: '=',
+          operator: 'and',
+        },
+      ],
       quotationNo: [
         {
           value: data,

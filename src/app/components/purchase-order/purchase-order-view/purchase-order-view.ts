@@ -11,7 +11,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DataViewModule } from 'primeng/dataview';
@@ -20,7 +20,7 @@ import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notificationService.service';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { PurchaseOrderService } from '../../../services/purchaseOrderService.service';
 import { LoadingService } from '../../../services/loading.service';
 import { Subject, Subscription, takeUntil } from 'rxjs';
@@ -31,7 +31,9 @@ import {
   PagingContent,
 } from '../../../shared/helpers/helpers';
 import { PurchaseOrderDto } from '../../../models/PurchaseOrderModel';
-import { PurchaseOrderStatus } from '../../../shared/enum/enum';
+import { PurchaseOrderStatus, UserRole } from '../../../shared/enum/enum';
+import { UserService } from '../../../services/userService.service';
+import { QuotationDto } from '../../../models/QuotationModel';
 
 @Component({
   selector: 'app-purchase-order-view',
@@ -59,26 +61,18 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
             </h3>
 
             <div class="w-full mb-2 flex flex-row items-center gap-2">
-              <div class="relative w-[70%] md:w-[85%]">
+              <div class="relative w-full">
                 <input
                   type="text"
                   pInputText
                   [(ngModel)]="search"
                   class="w-full !text-sm !tracking-wide !border-gray-200"
-                  placeholder="Search by PO"
+                  placeholder="Search by Purchase Order No"
                   (keyup)="Search(search)"
                 />
                 <i
                   class="pi pi-search !text-sm absolute top-2 right-3 !text-gray-500"
                 ></i>
-              </div>
-              <div class="w-[30%] md:w-[15%]">
-                <p-button
-                  label="Create New PO"
-                  severity="info"
-                  icon="pi pi-plus"
-                  styleClass="!text-xs !tracking-wider !w-full !shadow-md !text-shadow-md whitespace-nowrap"
-                ></p-button>
               </div>
             </div>
             <div
@@ -105,20 +99,20 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                       <th
                         class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
                       >
-                        PO
+                        Purchase Order No
                       </th>
                       <th
-                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
                       >
                         PO Date
                       </th>
                       <th
-                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
                       >
                         Amount
                       </th>
                       <th
-                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[15%]"
+                        class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[20%]"
                       >
                         Quotation ID
                       </th>
@@ -128,6 +122,7 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                         Status
                       </th>
                       <th
+                        *ngIf="role === 'Planner' || role === 'Admin'"
                         class="!text-sm !text-center !font-bold tracking-wider !bg-gray-100 !w-[10%]"
                       >
                         Action
@@ -137,7 +132,7 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                   <ng-template #body let-data>
                     <tr>
                       <td class="!text-center !text-sm !border-gray-200">
-                        {{ data.po }}
+                        {{ data.purchaseOrderNo }}
                       </td>
                       <td class="!text-center !text-sm !border-gray-200">
                         {{ data.poDate | date : 'dd/MM/YYYY' }}
@@ -148,9 +143,16 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                       <td class="!text-center !text-sm !border-gray-200">
                         <a
                           class="text-cyan-600 hover:underline cursor-pointer"
-                          (click)="ActionClick(data.id, 'quotation')"
+                          (click)="
+                            ActionClick(
+                              data.quotationId,
+                              'quotation',
+                              $event,
+                              data.quotation
+                            )
+                          "
                         >
-                          {{ data.quotationId }}</a
+                          {{ data.quotation?.quotationId }}</a
                         >
                       </td>
                       <td class="!text-center !text-sm !border-gray-200">
@@ -161,46 +163,29 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                         ></p-tag>
                       </td>
                       <td
-                        class="!text-center !text-sm flex flex-row justify-center items-center !border-gray-200"
+                        class="!text-center !text-sm !border-gray-200"
+                        *ngIf="role === 'Planner' || role === 'Admin'"
                       >
-                        <p-button
-                          *ngIf="data.status === 0"
-                          (onClick)="ActionClick(data.id, 'approve', $event)"
-                          styleClass="!text-xs"
-                          [text]="true"
-                          severity="success"
-                          pTooltip="Approve"
-                          tooltipPosition="top"
-                          ><ng-template pTemplate="icon">
-                            <i
-                              class="pi pi-check-circle !text-[15px]"
-                            ></i> </ng-template
-                        ></p-button>
-                        <p-button
-                          *ngIf="data.status === 0"
-                          (onClick)="ActionClick(data.id, 'reject', $event)"
-                          styleClass="!text-xs"
-                          [text]="true"
-                          severity="danger"
-                          pTooltip="Reject"
-                          tooltipPosition="top"
-                          ><ng-template pTemplate="icon">
-                            <i
-                              class="pi pi-times-circle !text-[15px]"
-                            ></i> </ng-template
-                        ></p-button>
-                        <p-button
-                          (onClick)="ActionClick(data.id, 'edit')"
-                          styleClass="!text-xs"
-                          [text]="true"
-                          severity="info"
-                          pTooltip="Edit"
-                          tooltipPosition="top"
-                          ><ng-template pTemplate="icon">
-                            <i
-                              class="pi pi-pencil !text-[15px]"
-                            ></i> </ng-template
-                        ></p-button>
+                        <div
+                          class="flex flex-row justify-center items-center gap-2"
+                        >
+                          <p-button
+                            *ngIf="data.status === 'Draft'"
+                            (onClick)="ActionClick(data.id, 'submit', $event)"
+                            severity="success"
+                            label="Generate WO"
+                            styleClass="!whitespace-nowrap !text-xs !text-shadow-md !tracking-wide"
+                            tooltipPosition="top"
+                          ></p-button>
+                          <p-button
+                            *ngIf="data.status === 'Draft'"
+                            (onClick)="ActionClick(data.id, 'edit')"
+                            styleClass="!whitespace-nowrap !text-xs !text-shadow-md !tracking-wide"
+                            severity="info"
+                            label="Edit"
+                            tooltipPosition="top"
+                          ></p-button>
+                        </div>
                       </td>
                     </tr>
                   </ng-template>
@@ -242,7 +227,9 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                           <div
                             class="flex flex-row items-center justify-between pb-3"
                           >
-                            <span class="font-semibold">#{{ item.po }}</span>
+                            <span class="font-semibold"
+                              >#{{ item.purchaseOrderNo }}</span
+                            >
                             <p-tag
                               [value]="item.status"
                               [severity]="SeverityStatus(item.status)"
@@ -278,33 +265,41 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                           >
                             <div>Quotation ID</div>
                             <div
-                              (click)="ActionClick(item.id, 'quotation')"
+                              (click)="
+                                ActionClick(
+                                  item.id,
+                                  'quotation',
+                                  $event,
+                                  item.quotation
+                                )
+                              "
                               class="text-cyan-600 hover:underline cursor-pointer"
                             >
-                              {{ item.quotationId }}
+                              {{ item.quotation.quotationId }}
                             </div>
                           </div>
                         </div>
                         <div
+                          *ngIf="role === 'Planner'"
                           class="border-b border-dashed border-gray-300"
                         ></div>
                         <div
                           class="flex flex-row items-center justify-end gap-3"
                         >
-                          <i
+                          <div
                             *ngIf="item.status === 'Draft'"
-                            (click)="ActionClick(item.id, 'reject')"
-                            class="pi pi-times-circle !text-sm !text-red-500 !text-shadow-md"
-                          ></i>
-                          <i
+                            (click)="ActionClick(item.id, 'submit', $event)"
+                            class="text-sm text-green-500 tracking-wide border px-3 rounded-md py-1"
+                          >
+                            Generate WO
+                          </div>
+                          <div
                             *ngIf="item.status === 'Draft'"
-                            (click)="ActionClick(item.id, 'approve')"
-                            class="pi pi-check-circle !text-sm !text-green-500 !text-shadow-md"
-                          ></i>
-                          <i
                             (click)="ActionClick(item.id, 'edit')"
-                            class="pi pi-pencil !text-sm !text-blue-500 !text-shadow-md"
-                          ></i>
+                            class="text-sm text-blue-500 tracking-wide border px-3 rounded-md py-1"
+                          >
+                            Edit
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -312,7 +307,11 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
                 </ng-template>
                 <ng-template #emptymessage>
                   <div class="flex justify-center items-center pt-3">
-                    <img src="assets/no-results.png" alt="" class="w-[50px]" />
+                    <img
+                      src="assets/no-results.png"
+                      alt=""
+                      class="w-[40px] opacity-75"
+                    />
                   </div>
                   <div
                     class="text-sm text-gray-500 tracking-wider text-center p-3"
@@ -325,6 +324,62 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
           </div>
         </div>
       </div>
+
+      <div
+        *ngIf="quotationDialog"
+        class="absolute top-0 right-0 w-full h-full backdrop-blur-xs"
+      >
+        <div
+          class="flex flex-col items-center md:justify-center w-full h-full pt-20 md:pt-0"
+        >
+          <div
+            class="relative px-3 py-4 border border-gray-200 w-[80%] md:w-[50%] min-h-[10%] md:min-h-[30%] bg-white/90 rounded-md shadow-lg flex flex-col gap-3"
+          >
+            <div class="absolute top-4 right-3">
+              <i
+                (click)="quotationDialog = false"
+                class="pi pi-times-circle !text-red-600 !cursor-pointer"
+                pTooltip="Close"
+              ></i>
+            </div>
+            <div
+              class="text-sm md:text-base tracking-widest text-gray-600 font-semibold text-shadow-sm"
+            >
+              #{{ selectedQuotation?.quotationId }}
+            </div>
+            <div class="border-b border-gray-200"></div>
+            <div
+              class="flex flex-row items-center justify-between text-xs md:text-sm tracking-wide"
+            >
+              <div class="text-gray-500">Quotation No</div>
+              <div>{{ selectedQuotation?.quotationNo }}</div>
+            </div>
+            <div
+              class="flex flex-row items-center justify-between text-xs md:text-sm tracking-wide"
+            >
+              <div class="text-gray-500">Vendor Name</div>
+              <div>{{ selectedQuotation?.vendorName }}</div>
+            </div>
+            <div
+              class="flex flex-row items-center justify-between text-xs md:text-sm tracking-wide"
+            >
+              <div class="text-gray-500">Received Date</div>
+              <div>
+                {{ selectedQuotation?.receivedDate | date : 'dd/MM/YYYY' }}
+              </div>
+            </div>
+            <div class="border-b border-gray-200"></div>
+            <div
+              class="flex flex-row items-center justify-between text-xs md:text-sm tracking-wide"
+            >
+              <div class="text-gray-500">Amount</div>
+              <div class="text-base md:text-lg font-semibold tracking-widest">
+                {{ selectedQuotation?.quotationAmount | currency : 'RM ' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <p-confirmdialog />`,
   styleUrl: './purchase-order-view.less',
@@ -333,10 +388,12 @@ import { PurchaseOrderStatus } from '../../../shared/enum/enum';
 export class PurchaseOrderView implements OnInit, OnDestroy {
   @ViewChild('fTable') fTable?: Table;
 
+  private readonly purchaseOrderService = inject(PurchaseOrderService);
   private readonly notificationService = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly purchaseOrderService = inject(PurchaseOrderService);
   private readonly loadingService = inject(LoadingService);
+  private readonly messageService = inject(MessageService);
+  private readonly userService = inject(UserService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
 
@@ -351,6 +408,10 @@ export class PurchaseOrderView implements OnInit, OnDestroy {
   );
 
   search: string = '';
+  role: UserRole | null = null;
+  quotationDialog: boolean = false;
+  selectedQuotation: QuotationDto | null = null;
+
   isMobile = window.innerWidth < 770;
 
   @HostListener('window: resize', [])
@@ -359,11 +420,14 @@ export class PurchaseOrderView implements OnInit, OnDestroy {
   }
 
   constructor() {
+    this.role = this.userService.currentUser?.userRole ?? null;
+
     this.Query.Page = 1;
     this.Query.PageSize = 10;
     this.Query.OrderBy = 'CreatedAt desc';
     this.Query.Filter = null;
     this.Query.Select = null;
+    this.Query.Includes = 'Quotation';
   }
 
   ngOnInit(): void {
@@ -426,7 +490,7 @@ export class PurchaseOrderView implements OnInit, OnDestroy {
 
   Search(data: string) {
     const filter = {
-      quotationNo: [
+      purchaseOrderNo: [
         {
           value: data,
           matchMode: '=',
@@ -456,21 +520,78 @@ export class PurchaseOrderView implements OnInit, OnDestroy {
     }
   }
 
-  ActionClick(id: number, type: string, event?: Event) {
+  ActionClick(id: string, type: string, event?: Event, data?: any) {
     if (type === 'edit') {
       this.router.navigate(['/purchase-order/form'], { queryParams: { id } });
       return;
     }
 
     if (type === 'quotation') {
-      this.router.navigate(['/quotation/form'], { queryParams: { id } });
+      if (this.role === 'Planner') {
+        this.router.navigate(['/quotation/form'], { queryParams: { id } });
+      } else {
+        this.selectedQuotation = data;
+        this.quotationDialog = true;
+        this.cdr.detectChanges();
+      }
+
+      return;
+    }
+    if (type === 'submit') {
+      this.confirmationService.confirm({
+        target: event?.target as EventTarget,
+        message: 'Are you sure that you want to proceed?',
+        header: 'Confirmation',
+        closable: true,
+        closeOnEscape: true,
+        icon: 'pi pi-exclamation-triangle',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Confirm',
+        },
+        accept: () => {
+          this.loadingService.start();
+          this.purchaseOrderService
+            .Submit(id)
+            .pipe(takeUntil(this.ngUnsubscribe))
+            .subscribe({
+              next: (res) => {
+                this.PagingSignal.update((state) => {
+                  const newData = state.data.map((item) => {
+                    if (item.id === id) {
+                      return { ...item, status: PurchaseOrderStatus.Submitted };
+                    }
+                    return item;
+                  });
+                  return { ...state, data: newData };
+                });
+
+                this.loadingService.stop();
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Work Order Created',
+                  detail: `Purchase Order #${res.purchaseOrderNo} has been successfully submitted. Work Order #${res.workOrderNo} has been generated.`,
+                  life: 5000, // message stays for 5 seconds
+                });
+              },
+              error: (err) => {
+                this.loadingService.stop();
+              },
+            });
+        },
+        reject: () => {},
+      });
       return;
     }
   }
 
   SeverityStatus(status: PurchaseOrderStatus) {
     switch (status) {
-      case PurchaseOrderStatus.Approved:
+      case PurchaseOrderStatus.Submitted:
         return 'success';
       case PurchaseOrderStatus.Draft:
         return 'warn';
