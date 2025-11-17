@@ -28,14 +28,9 @@ import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { ConfirmationService } from 'primeng/api';
-import {
-  DeliveryStatus,
-  JobPriority,
-  JobStatus,
-} from '../../../shared/enum/enum';
+import { MessageService } from 'primeng/api';
+import { JobPriority, JobStatus } from '../../../shared/enum/enum';
 import { Tooltip } from 'primeng/tooltip';
-import { query } from '@angular/animations';
 
 @Component({
   selector: 'app-job-view',
@@ -50,7 +45,7 @@ import { query } from '@angular/animations';
     Tooltip,
   ],
   template: `<div
-    class="relative w-full px-3 md:pt-5 md:px-6 bg-cover bg-center flex flex-col min-h-[98vh] md:min-h-[91.8vh] bg-white/60"
+    class="relative w-full px-3 md:pt-5 md:px-6 bg-cover bg-center flex flex-col border-2 pb-40 md:pb-0 min-h-[98vh] md:min-h-[91.8vh] bg-white/60"
   >
     <div
       class="text-xl pt-16 md:pt-0 tracking-widest pb-3 font-semibold text-gray-700"
@@ -90,13 +85,7 @@ import { query } from '@angular/animations';
     >
       <div
         *ngFor="
-          let status of [
-            'All',
-            'InProgress',
-            'Pending',
-            'Completed',
-            'Cancelled'
-          ]
+          let status of ['All', 'WIP', 'Pending', 'Completed', 'Cancelled']
         "
         (click)="FilterStatus(status)"
         [ngClass]="{
@@ -130,8 +119,9 @@ import { query } from '@angular/animations';
                   <div
                     class="border px-5 py-0.5 text-xs rounded-full text-white text-shadow-md tracking-wider"
                     [ngClass]="{
-                      'bg-blue-400': data.status === 'InProgress',
-                      'bg-orange-400': data.status === 'OnHold',
+                      'bg-blue-400': data.status === 'WIP',
+                      'bg-orange-400':
+                        data.status === 'OnHold' || data.status === 'Pending',
                       'bg-red-400': data.status === 'Cancelled',
                       'bg-green-400': data.status === 'Completed'
                     }"
@@ -204,51 +194,198 @@ import { query } from '@angular/animations';
         (onSelect)="SelectRangeDate($event)"
       />
     </div>
+
     <div
       *ngIf="detailDialog"
-      class="backdrop-blur-xs absolute top-0 right-0 w-full min-h-[91.5vh] transition-opacity duration-3000 ease-in-out"
+      class="absolute top-12 md:top-0 left-0 w-full h-full bg-black/30 flex md:items-center justify-center p-3"
     >
       <div
         *ngIf="selectedJob"
-        class="w-full min-h-[91.5vh] flex flex-col justify-end items-end px-5"
+        class="relative mt-10 md:mt-0 p-2 border-t-8 border md:w-[80%] h-[50%] overflow-y-auto md:h-[80%] rounded-md border-gray-300 bg-white"
+        [ngClass]="{
+          'border-t-yellow-500': selectedJob.priority === 'Medium',
+          'border-t-blue-500': selectedJob.priority === 'Low',
+          'border-t-red-500': selectedJob.priority === 'High',
+          'border-t-orange-500': selectedJob.priority === 'Critical'
+        }"
       >
         <div
-          class="relative w-full h-[60vh] border p-2 bg-white border-gray-200 rounded-md"
-        >
-          <div
-            class="pi pi-times !text-gray-500 absolute top-2 right-2 cursor-pointer"
-            (click)="detailDialog = false"
-          ></div>
-          <div class="flex flex-col p-2">
-            <div class="font-semibold text-gray-500 tracking-wider text-xl">
+          (click)="detailDialog = false"
+          class="pi pi-times cursor-pointer absolute top-2 right-2"
+          tooltipPosition="left"
+        ></div>
+
+        <div class="flex flex-col md:h-full md:justify-between">
+          <div class="flex flex-col">
+            <div class="font-semibold tracking-wider text-lg text-gray-700">
               #{{ selectedJob.jobNo }}
+            </div>
+            <div class="flex flex-row items-center gap-2 mt-2">
+              <div class="text-xs text-gray-600 tracking-wider">Priority :</div>
+              <div
+                class="border px-5 py-0.5 pt-1 text-xs rounded-full text-white text-shadow-md tracking-wider"
+                [ngClass]="{
+                  'bg-blue-400': selectedJob.priority === 'Low',
+                  'bg-orange-400': selectedJob.priority === 'Critical',
+                  'bg-red-400': selectedJob.priority === 'High',
+                  'bg-yellow-500': selectedJob.priority === 'Medium'
+                }"
+              >
+                {{ selectedJob.priority }}
+              </div>
+            </div>
+            <div class="border-b border-gray-200 mt-3 mb-3"></div>
+            <div class="flex flex-row items-center">
+              <div class="flex flex-row items-center gap-2 w-[30%] md:w-[15%]">
+                <i class="pi pi-users !text-gray-500 !text-sm"></i>
+                <div class="text-gray-500 text-xs tracking-wider">
+                  Assigned By :
+                </div>
+              </div>
+              <div
+                *ngIf="selectedJob.assignedByUser"
+                class="flex flex-row items-center gap-2 bg-gray-100 py-1 px-1 pr-3 rounded-full"
+              >
+                <div
+                  class="w-5 h-5 p-2 flex items-center justify-center rounded-full border border-gray-300 bg-gray-200"
+                >
+                  <i
+                    class="pi pi-user !text-shadow-md !text-xs !text-gray-700"
+                  ></i>
+                </div>
+                <div
+                  class="text-xs pt-1 tracking-wider text-shadow-md text-gray-700"
+                >
+                  {{ selectedJob.assignedByUser?.fullName }}
+                </div>
+              </div>
+              <div
+                *ngIf="!selectedJob.assignedByUser"
+                class="text-xs font-semibold tracking-wider text-gray-600"
+              >
+                N/A
+              </div>
+            </div>
+            <div class="flex flex-row items-center mt-2">
+              <div class="flex flex-row items-center gap-2 w-[30%] md:w-[15%]">
+                <i class="pi pi-calendar-clock !text-gray-500 !text-sm"></i>
+                <div class="text-gray-500 text-xs tracking-wider">
+                  Due Date :
+                </div>
+              </div>
+              <div class="text-xs font-semibold tracking-wider text-gray-600">
+                {{ selectedJob.dueDate | date : 'MMMM dd, YYYY' }}
+              </div>
+            </div>
+            <div class="flex flex-row items-center mt-2">
+              <div class="flex flex-row items-center gap-2 w-[30%] md:w-[15%]">
+                <i class="pi pi-chart-pie !text-gray-500 !text-sm"></i>
+                <div class="text-gray-500 text-xs tracking-wider">Status :</div>
+              </div>
+              <div
+                class="flex flex-row items-center border px-5 py-0.5 pt-1 text-xs rounded-md tracking-wider"
+                [ngClass]="{
+                  'border-blue-400 text-blue-400': selectedJob.status === 'WIP',
+                  'border-orange-400 text-orange-400':
+                    selectedJob.status === 'OnHold' ||
+                    selectedJob.status === 'Pending',
+                  'border-red-400 text-red-400':
+                    selectedJob.status === 'Cancelled',
+                  'border-green-400 text-green-400':
+                    selectedJob.status === 'Completed'
+                }"
+              >
+                <div class="pi pi-circle-fill !text-[5px]"></div>
+                <div class="ml-1 text-[10px]">
+                  {{ selectedJob.status }}
+                </div>
+              </div>
+            </div>
+            <div class="border-b border-gray-300 mt-4 mb-4"></div>
+            <div class="flex flex-row items-center gap-1 pb-1">
+              <div
+                class="pi pi-clipboard !text-xs !text-gray-700 !text-shadow-md"
+              ></div>
+              <div class="text-sm tracking-wider">Description</div>
+            </div>
+            <div class="text-xs text-gray-500 tracking-wider">
+              {{ selectedJob.description ?? 'N/A' }}
+            </div>
+            <div class="pt-3 pb-2 text-sm tracking-wider">Remarks</div>
+            <div class="text-xs text-gray-500 tracking-wider">
+              <div>{{ selectedJob.remarks ?? 'N/A' }}</div>
+            </div>
+          </div>
+          <div class="flex flex-col w-full">
+            <div class="border-b border-dashed border-gray-300 mt-4 mb-4"></div>
+            <div class="grid grid-cols-3 md:grid-cols-5 gap-2 w-full">
+              <p-button
+                (onClick)="changeJobStatus(selectedJob.id, 'start')"
+                [disabled]="selectedJob.status !== 'Pending'"
+                label="Start"
+                class="w-full"
+                severity="info"
+                styleClass="!flex-1 !py-1.5 w-full !text-xs md:!text-sm !tracking-wider !rounded-none"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-play !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+              <p-button
+                (onClick)="changeJobStatus(selectedJob.id, 'onHold')"
+                [disabled]="selectedJob.status !== 'WIP'"
+                label="OnHold"
+                class="w-full"
+                severity="warn"
+                styleClass="!flex-1 !py-1.5 w-full !text-xs md:!text-sm !tracking-wider !rounded-none"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-pause !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+              <p-button
+                (onClick)="changeJobStatus(selectedJob.id, 'resume')"
+                [disabled]="selectedJob.status !== 'OnHold'"
+                label="Resume"
+                class="w-full"
+                severity="info"
+                styleClass="!flex-1 !py-1.5 w-full !text-xs md:!text-sm !tracking-wider !rounded-none"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-caret-right !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+              <p-button
+                (onClick)="changeJobStatus(selectedJob.id, 'complete')"
+                [disabled]="selectedJob.status !== 'WIP'"
+                label="Complete"
+                severity="success"
+                class="w-full"
+                styleClass="!flex-1 !py-1.5 w-full !text-xs md:!text-sm !tracking-wider !rounded-none"
+              >
+                <ng-template #icon>
+                  <div
+                    class="pi pi-check !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+              <p-button
+                (onClick)="changeJobStatus(selectedJob.id, 'cancel')"
+                [disabled]="
+                  selectedJob.status === 'Cancelled' ||
+                  selectedJob.status === 'OnHold'
+                "
+                label="Cancel"
+                severity="danger"
+                class="w-full"
+                styleClass="!flex-1 !py-1.5 w-full !text-xs md:!text-sm !tracking-wider !rounded-none"
+              >
+                <ng-template #icon>
+                  <div class="pi pi-times !text-xs md:!text-sm"></div>
+                </ng-template>
+              </p-button>
             </div>
           </div>
         </div>
-        <!-- <div
-          *ngIf="selectedJob"
-          class="relative px-4 mr-5 flex flex-col rounded-lg border border-gray-300 bg-white drop-shadow-lg p-2 w-full min-h-[50vh]"
-        >
-          <div
-            class="absolute top-3 right-3 cursor-pointer z-20"
-            (click)="detailDialog = false"
-          >
-            <i class="pi pi-times"></i>
-          </div>
-
-          <div class="flex flex-row items-center gap-3">
-            <div class="text-gray-600 tracking-wider text-xl font-bold">
-              #{{ selectedJob.jobNo }}
-            </div>
-            <div
-              class="px-4 py-1 font-semibold rounded-full text-white tracking-widest pb-1.5 text-[10px] text-shadow-lg text-shadow-black/30"
-              [ngClass]="{ 'bg-blue-400': selectedJob.priority === 'Low' }"
-            >
-              {{ selectedJob.priority }}
-            </div>
-          </div>
-          <div class="w-full mt-2 mb-2 border-b border-gray-200"></div>
-        </div> -->
       </div>
     </div>
   </div>`,
@@ -260,6 +397,7 @@ export class JobView implements OnInit, OnDestroy {
 
   private readonly notificationService = inject(NotificationService);
   private readonly loadingService = inject(LoadingService);
+  private readonly messageService = inject(MessageService);
   private readonly jobService = inject(JobService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
@@ -296,7 +434,8 @@ export class JobView implements OnInit, OnDestroy {
     this.Query.Filter = null;
     this.Query.Select = null;
     this.Query.OrderBy = 'CreatedAt';
-    this.Query.Includes = 'WorkOrder';
+    this.Query.Includes =
+      'WorkOrder,AssignedByUser,AssignedToUser,WorkOrderTechnician';
   }
 
   ngOnInit(): void {
@@ -409,6 +548,86 @@ export class JobView implements OnInit, OnDestroy {
     }
   }
 
+  changeJobStatus(
+    id: string,
+    type: 'start' | 'onHold' | 'resume' | 'complete' | 'cancel'
+  ) {
+    this.loadingService.start();
+
+    let observable$;
+
+    switch (type) {
+      case 'start':
+        observable$ = this.jobService.Start(id);
+        break;
+      case 'onHold':
+        observable$ = this.jobService.OnHold(id);
+        break;
+      case 'resume':
+        observable$ = this.jobService.Resume(id);
+        break;
+      case 'complete':
+        observable$ = this.jobService.Complete(id);
+        break;
+      case 'cancel':
+        observable$ = this.jobService.Cancel(id);
+        break;
+      default:
+        observable$ = null;
+        break;
+    }
+
+    observable$?.pipe(takeUntil(this.ngUnsubscribe)).subscribe({
+      next: (res) => {
+        this.loadingService.stop();
+
+        const statusMap = {
+          start: JobStatus.WIP,
+          onHold: JobStatus.OnHold,
+          resume: JobStatus.WIP,
+          complete: JobStatus.Completed,
+          cancel: JobStatus.Cancelled,
+        };
+
+        this.PagingSignal.update((state) => {
+          const updatedData = state.data.map((job) => {
+            if (job.id === res.job.id) {
+              return { ...job, status: statusMap[type] };
+            }
+            return job;
+          });
+          return { ...state, data: updatedData };
+        });
+
+        if (this.selectedJob) {
+          this.selectedJob.status = statusMap[type];
+          if (type === 'complete') this.selectedJob.completionDate = new Date();
+        }
+
+        const summaryMap = {
+          start: 'Job Started',
+          onHold: 'Job On Hold',
+          resume: 'Job Resumed',
+          complete: 'Job Completed',
+          cancel: 'Job Cancelled',
+        };
+
+        this.addNotification(`${summaryMap[type]}: Job #${res.job.jobNo}`);
+        this.messageService.add({
+          severity: 'success',
+          summary: summaryMap[type],
+          detail: res.message,
+        });
+      },
+      error: (err) => {
+        this.loadingService.stop();
+      },
+      complete: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   displayCalendar() {
     this.startDate = undefined;
     this.endDate = undefined;
@@ -440,7 +659,7 @@ export class JobView implements OnInit, OnDestroy {
         return 'success';
       case JobStatus.Pending:
         return 'warn';
-      case JobStatus.InProgress:
+      case JobStatus.WIP:
         return 'info';
       default:
         return 'danger';

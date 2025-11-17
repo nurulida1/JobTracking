@@ -18,7 +18,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { LoadingService } from '../../../services/loading.service';
 import { JobService } from '../../../services/jobService.service';
 import { MessageService } from 'primeng/api';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { Subject, takeUntil } from 'rxjs';
@@ -36,7 +36,7 @@ import { Subject, takeUntil } from 'rxjs';
     RouterLink,
   ],
   template: `<div class="w-full min-h-[91.5vh] px-6 py-5 bg-white">
-    <div class="flex flex-col">
+    <div class="flex flex-col pt-12 md:pt-0">
       <div
         class="flex flex-row items-center gap-2 font-semibold text-lg tracking-wider text-gray-600"
       >
@@ -44,7 +44,7 @@ import { Subject, takeUntil } from 'rxjs';
         <div>Update Job: #{{ jobNo }}</div>
       </div>
       <div [formGroup]="FG">
-        <div class="grid grid-cols-2 gap-4 pt-5">
+        <div class="grid md:grid-cols-2 gap-4 pt-5">
           <div class="flex flex-col gap-2">
             <div class="text-sm text-gray-700 tracking-wider">Due Date</div>
             <p-datepicker
@@ -126,6 +126,7 @@ export class JobForm implements OnInit, OnDestroy {
   private readonly messageService = inject(MessageService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly jobService = inject(JobService);
+  private readonly router = inject(Router);
 
   protected ngUnsubscribe: Subject<void> = new Subject<void>();
 
@@ -184,6 +185,7 @@ export class JobForm implements OnInit, OnDestroy {
         .subscribe({
           next: (res) => {
             this.loadingService.stop();
+            this.router.navigate(['/job']);
             this.messageService.add({
               severity: 'success',
               summary: 'Success',

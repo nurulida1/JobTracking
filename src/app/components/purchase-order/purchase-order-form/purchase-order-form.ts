@@ -42,7 +42,7 @@ import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
     <div
       class="relative w-full min-h-[98vh] flex flex-col border-gray-300 rounded-xl bg-white/80"
     >
-      <div class="w-full">
+      <div class="w-full md:py-0 pt-3 pb-10">
         <div class="h-[90%] pb-20 pt-12 md:pt-0 md:pb-0">
           <div class="p-4 flex flex-col">
             <h3 class="text-lg font-semibold mb-3 text-blue-400 tracking-wider">
@@ -50,7 +50,9 @@ import { ValidateAllFormFields } from '../../../shared/helpers/helpers';
             </h3>
 
             <div [formGroup]="FG">
-              <div class="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-6">
+              <div
+                class="md:mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-6"
+              >
                 <div class="col-span-6">
                   <label
                     for="first-name"

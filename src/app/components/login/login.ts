@@ -240,6 +240,7 @@ export class Login implements OnDestroy, OnInit {
   private readonly loadingService = inject(LoadingService);
   private readonly accountService = inject(AccountService);
   private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
 
@@ -283,8 +284,8 @@ export class Login implements OnDestroy, OnInit {
     const password = this.FG.get('password')?.value;
     const rememberMe = this.FG.get('rememberMe')?.value;
 
-    this.accountService
-      .Login(username, password)
+    this.authService
+      .authenticate(username, password)
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe({
         next: (res) => {

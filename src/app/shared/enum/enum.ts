@@ -45,7 +45,7 @@ export enum JobPriority {
 
 export enum JobStatus {
   Pending = 'Pending',
-  InProgress = 'InProgress',
+  WIP = 'WIP',
   OnHold = 'OnHold',
   Completed = 'Completed',
   Cancelled = 'Cancelled',

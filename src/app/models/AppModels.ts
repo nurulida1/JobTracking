@@ -9,8 +9,8 @@ export interface DashboardSummary {
       rejected: number;
     };
     jobs: {
-      active: number;
-      delayed: number;
+      wip: number;
+      onHold: number;
       pending: number;
     };
     workOrders: number;

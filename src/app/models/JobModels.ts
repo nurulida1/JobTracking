@@ -10,9 +10,9 @@ export interface JobDto extends BaseModel {
   workOrderTechnicianId?: string;
   workOrderTechnician?: WorkOrderTechnician;
   assigntoUserId?: string;
-  assignedToUsername: string;
+  assignedToUser: UserDto;
   assignByUserId?: string;
-  assignedByUsername: string;
+  assignedByUser: UserDto;
   description?: string;
   priority: JobPriority;
   dueDate?: Date;

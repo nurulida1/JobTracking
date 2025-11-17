@@ -38,7 +38,7 @@ export class AppService {
   TodayTasks(userId: string): Observable<JobTaskResponse> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
-      .get<JobTaskResponse>(`https://192.168.1.69:5000/technician/todayTasks`, {
+      .get<JobTaskResponse>(`https://192.168.1.75:5000/technician/todayTasks`, {
         params,
       })
       .pipe(retry(1), catchError(this.handleError('TodayTasks')));

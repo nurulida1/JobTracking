@@ -41,7 +41,6 @@ import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroup } from 'primeng/avatargroup';
 import { TextareaModule } from 'primeng/textarea';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { UserDto } from '../../../models/UserModel';
 
 @Component({
   selector: 'app-work-order-view',
@@ -64,8 +63,8 @@ import { UserDto } from '../../../models/UserModel';
       class="relative w-full bg-cover bg-center flex items-center justify-center bg-white/60"
     >
       <div class="relative w-full min-h-[98vh] md:min-h-[91.8vh] flex flex-col">
-        <div class="flex flex-row">
-          <div class="w-full pt-14 md:pt-0 flex-1">
+        <div class="flex flex-row md:pb-0 pb-10">
+          <div class="w-full pt-14 md:pt-0 md:flex-1">
             <div class="p-4 flex flex-col">
               <h3
                 class="text-xl font-semibold mb-3 text-gray-600 text-shadow-md text-shadow-black/10 tracking-wider"
@@ -208,192 +207,224 @@ import { UserDto } from '../../../models/UserModel';
               </div>
             </div>
           </div>
-          <div class="flex-1 border-l border-gray-200 bg-white">
-            <div class="flex flex-col px-3 py-2" *ngIf="selectedWO">
-              <div class="font-semibold text-lg tracking-widest">
-                #{{ selectedWO.workOrderNo }}
-              </div>
-              <div class="border-b border-gray-100 mt-2 mb-2"></div>
-              <div class="flex flex-row items-center gap-2 justify-between">
-                <div class="flex-1">
-                  <p-button
-                    (onClick)="changeWorkOrderStatus(selectedWO.id, 'start')"
-                    label="Start"
-                    severity="info"
-                    styleClass="!w-full !text-sm !py-1.5 !tracking-wide !rounded-sm"
-                    icon="pi pi-play"
-                    [disabled]="selectedWO.status !== 'Pending'"
-                  ></p-button>
-                </div>
-                <div class="flex-1">
-                  <p-button
-                    (onClick)="changeWorkOrderStatus(selectedWO.id, 'onHold')"
-                    label="OnHold"
-                    severity="danger"
-                    styleClass="!w-full !text-sm !py-1.5 !tracking-wide !rounded-sm"
-                    icon="pi pi-pause"
-                    [disabled]="selectedWO.status !== 'WIP'"
-                  ></p-button>
-                </div>
-                <div class="flex-1">
-                  <p-button
-                    (onClick)="changeWorkOrderStatus(selectedWO.id, 'resume')"
-                    label="Resume"
-                    severity="help"
-                    styleClass="!w-full !text-sm !py-1.5 !tracking-wide !rounded-sm"
-                    icon="pi pi-caret-right"
-                    [disabled]="selectedWO.status !== 'OnHold'"
-                  ></p-button>
-                </div>
-                <div class="flex-1">
-                  <p-button
-                    (onClick)="changeWorkOrderStatus(selectedWO.id, 'complete')"
-                    severity="success"
-                    label="Complete"
-                    styleClass="!w-full !text-sm !py-1.5 !tracking-wide !rounded-sm"
-                    icon="pi pi-check"
-                    [disabled]="selectedWO.status !== 'WIP'"
-                  ></p-button>
-                </div>
-              </div>
-              <div class="border-b border-gray-100 mt-2 mb-2"></div>
-
-              <div class="pb-1 text-sm text-gray-600 tracking-wide">Site</div>
-              <input
-                [disabled]="selectedWO.status === 'Completed'"
-                type="text"
-                pInputText
-                class="w-full !text-sm"
-                [(ngModel)]="selectedWO.site"
-              />
-
-              <div class="pt-3 pb-1 text-sm text-gray-600 tracking-wide">
-                Remarks
-                <span class="italic text-xs text-gray-500">(Optional)</span>
-              </div>
-              <input
-                [disabled]="selectedWO.status === 'Completed'"
-                type="text"
-                pInputText
-                class="w-full !text-sm"
-                [(ngModel)]="selectedWO.remarks"
-              />
-
-              <div class="pt-3 pb-1 text-sm text-gray-600 tracking-wide">
-                Job Description
-              </div>
-              <textarea
-                [disabled]="selectedWO.status === 'Completed'"
-                rows="5"
-                cols="30"
-                pTextarea
-                class="w-full !text-sm"
-                [autoResize]="true"
-                [(ngModel)]="selectedWO.jobDescription"
-              ></textarea>
-              <div class="pt-3 pb-1 text-sm text-gray-600 tracking-wide">
-                Assign Technicians
-              </div>
-              <p-multiselect
-                [disabled]="selectedWO.status === 'Completed'"
-                [options]="technicianOptions || []"
-                [(ngModel)]="technicianIds"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Technicians"
-                class="w-full !text-sm"
-                panelStyleClass="!text-sm"
-                appendTo="body"
-              ></p-multiselect>
-              <div class="flex flex-row items-center justify-end gap-2 pt-5">
-                <p-button
-                  [disabled]="selectedWO.status === 'Completed'"
-                  (onClick)="ActionClick(selectedWO.id, 'reset', selectedWO)"
-                  label="Reset"
-                  severity="secondary"
-                  styleClass="!text-sm !py-1.5 !px-4 !tracking-wider"
-                ></p-button>
-                <p-button
-                  [disabled]="selectedWO.status === 'Completed'"
-                  (onClick)="ActionClick(selectedWO.id, 'update', selectedWO)"
-                  label="Save Changes"
-                  severity="info"
-                  styleClass="!text-sm !py-1.5 !px-4 !tracking-wider"
-                ></p-button>
-              </div>
-              <div class="border-b border-gray-200 mt-4 mb-2"></div>
-
+          <div
+            *ngIf="!isMobile"
+            class="flex-1 border-l h-full border-gray-200 bg-white"
+          >
+            <ng-container *ngTemplateOutlet="details"></ng-container>
+          </div>
+          <div
+            *ngIf="isMobile && selectedWO"
+            class="absolute top-0 right-0 bg-black/30 w-full h-full"
+          >
+            <div class="mt-20 flex justify-center">
               <div
-                class="py-2 text-sm font-semibold text-gray-600 tracking-wider"
+                class="h-[80%] w-[90%] border-2 bg-white border-gray-200 p-2 relative"
               >
-                Assigned Technicians
+                <div
+                  class="pi pi-times absolute top-3 right-3 cursor-pointer"
+                  (click)="selectedWO = null"
+                ></div>
+                <ng-container *ngTemplateOutlet="details"></ng-container>
               </div>
-              <p-table
-                dataKey="id"
-                [value]="assignedTechnicians || []"
-                size="small"
-                [tableStyle]="{ 'min-width': '10rem' }"
-                tableStyleClass="!w-full border border-gray-200"
-                styleClass="!w-full"
-              >
-                <ng-template #header>
-                  <tr>
-                    <th class="text-sm !text-center w-[20%] !bg-gray-100">
-                      No
-                    </th>
-                    <th class="text-sm !text-center w-[60%] !bg-gray-100">
-                      Name
-                    </th>
-                    <th class="text-sm !text-center w-[20%] !bg-gray-100">
-                      Action
-                    </th>
-                  </tr>
-                </ng-template>
-                <ng-template #body let-data let-i="rowIndex">
-                  <tr>
-                    <td>
-                      <div class="text-sm text-gray-700 text-center">
-                        {{ i + 1 }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="text-sm text-gray-700 text-center">
-                        {{ data.fullName }}
-                      </div>
-                    </td>
-                    <td>
-                      <div
-                        class="flex justify-center items-center text-sm text-gray-700 text-center"
-                      >
-                        <p-button
-                          (onClick)="RemoveTechnician(data.id)"
-                          icon="pi pi-trash"
-                          [text]="true"
-                          severity="danger"
-                          styleClass="!text-sm"
-                          [disabled]="selectedWO.status === 'Completed'"
-                        ></p-button>
-                      </div>
-                    </td>
-                  </tr>
-                </ng-template>
-
-                <ng-template #emptymessage>
-                  <tr>
-                    <td colspan="100%" class="!text-center !border">
-                      <div
-                        class="text-center !text-sm !text-gray-500 !tracking-wider"
-                      >
-                        No assigned technicians.
-                      </div>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
             </div>
           </div>
         </div>
       </div>
+
+      <ng-template #details>
+        <div
+          class="h-full flex flex-col justify-center px-3 py-2"
+          *ngIf="selectedWO"
+        >
+          <div class="font-semibold text-lg tracking-widest">
+            #{{ selectedWO.workOrderNo }}
+          </div>
+          <div class="border-b border-gray-100 mt-2 mb-2"></div>
+          <div class="flex flex-row items-center gap-2 justify-between">
+            <div class="flex-1">
+              <p-button
+                (onClick)="changeWorkOrderStatus(selectedWO.id, 'start')"
+                label="Start"
+                severity="info"
+                styleClass="!w-full !text-sm !py-1.5 !tracking-wide !text-xs md:!rounded-sm"
+                [disabled]="selectedWO.status !== 'Pending'"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-play !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+            </div>
+            <div class="flex-1">
+              <p-button
+                (onClick)="changeWorkOrderStatus(selectedWO.id, 'onHold')"
+                label="OnHold"
+                severity="danger"
+                styleClass="!w-full !text-sm !py-1.5 !tracking-wide !text-xs md:!rounded-sm"
+                [disabled]="selectedWO.status !== 'WIP'"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-pause !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+            </div>
+            <div class="flex-1">
+              <p-button
+                (onClick)="changeWorkOrderStatus(selectedWO.id, 'resume')"
+                label="Resume"
+                severity="help"
+                styleClass="!w-full !text-sm !py-1.5 !tracking-wide !text-xs md:!rounded-sm"
+                [disabled]="selectedWO.status !== 'OnHold'"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-caret-right !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+            </div>
+            <div class="flex-1">
+              <p-button
+                (onClick)="changeWorkOrderStatus(selectedWO.id, 'complete')"
+                severity="success"
+                label="Complete"
+                styleClass="!w-full !text-sm !py-1.5 !tracking-wide !text-xs md:!rounded-sm"
+                [disabled]="selectedWO.status !== 'WIP'"
+                ><ng-template #icon>
+                  <div
+                    class="pi pi-check !text-xs md:!text-sm"
+                  ></div> </ng-template
+              ></p-button>
+            </div>
+          </div>
+          <div class="border-b border-gray-100 mt-2 mb-2"></div>
+
+          <div class="pb-1 text-sm text-gray-600 tracking-wide">Site</div>
+          <input
+            [disabled]="selectedWO.status === 'Completed'"
+            type="text"
+            pInputText
+            class="w-full !text-sm"
+            [(ngModel)]="selectedWO.site"
+          />
+
+          <div class="pt-3 pb-1 text-sm text-gray-600 tracking-wide">
+            Remarks
+            <span class="italic text-xs text-gray-500">(Optional)</span>
+          </div>
+          <input
+            [disabled]="selectedWO.status === 'Completed'"
+            type="text"
+            pInputText
+            class="w-full !text-sm"
+            [(ngModel)]="selectedWO.remarks"
+          />
+
+          <div class="pt-3 pb-1 text-sm text-gray-600 tracking-wide">
+            Job Description
+          </div>
+          <textarea
+            [disabled]="selectedWO.status === 'Completed'"
+            rows="5"
+            cols="30"
+            pTextarea
+            class="w-full !text-sm"
+            [autoResize]="true"
+            [(ngModel)]="selectedWO.jobDescription"
+          ></textarea>
+          <div class="pt-3 pb-1 text-sm text-gray-600 tracking-wide">
+            Assign Technicians
+          </div>
+          <p-multiselect
+            [disabled]="selectedWO.status === 'Completed'"
+            [options]="technicianOptions || []"
+            [(ngModel)]="technicianIds"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select Technicians"
+            class="w-full !text-sm"
+            panelStyleClass="!text-sm"
+            appendTo="body"
+          ></p-multiselect>
+          <div class="flex flex-row items-center justify-end gap-2 pt-5">
+            <p-button
+              [disabled]="selectedWO.status === 'Completed'"
+              (onClick)="ActionClick(selectedWO.id, 'reset', selectedWO)"
+              label="Reset"
+              severity="secondary"
+              styleClass="!text-sm !py-1.5 !px-4 !tracking-wider"
+            ></p-button>
+            <p-button
+              [disabled]="selectedWO.status === 'Completed'"
+              (onClick)="ActionClick(selectedWO.id, 'update', selectedWO)"
+              label="Save Changes"
+              severity="info"
+              styleClass="!text-sm !py-1.5 !px-4 !tracking-wider"
+            ></p-button>
+          </div>
+          <div class="border-b border-gray-200 mt-4 mb-2"></div>
+
+          <div class="py-2 text-sm font-semibold text-gray-600 tracking-wider">
+            Assigned Technicians
+          </div>
+          <p-table
+            dataKey="id"
+            [value]="assignedTechnicians || []"
+            size="small"
+            [tableStyle]="{ 'min-width': '10rem' }"
+            tableStyleClass="!w-full border border-gray-200"
+            styleClass="!w-full"
+          >
+            <ng-template #header>
+              <tr>
+                <th class="text-sm !text-center w-[20%] !bg-gray-100">No</th>
+                <th class="text-sm !text-center w-[60%] !bg-gray-100">Name</th>
+                <th class="text-sm !text-center w-[20%] !bg-gray-100">
+                  Action
+                </th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-data let-i="rowIndex">
+              <tr>
+                <td>
+                  <div class="text-sm text-gray-700 text-center">
+                    {{ i + 1 }}
+                  </div>
+                </td>
+                <td>
+                  <div class="text-sm text-gray-700 text-center">
+                    {{ data.fullName }}
+                  </div>
+                </td>
+                <td>
+                  <div
+                    class="flex justify-center items-center text-sm text-gray-700 text-center"
+                  >
+                    <p-button
+                      (onClick)="RemoveTechnician(data.id)"
+                      icon="pi pi-trash"
+                      [text]="true"
+                      severity="danger"
+                      styleClass="!text-sm"
+                      [disabled]="selectedWO.status === 'Completed'"
+                    ></p-button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="100%" class="!text-center !border">
+                  <div
+                    class="text-center !text-sm !text-gray-500 !tracking-wider"
+                  >
+                    No assigned technicians.
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </ng-template>
 
       <div
         *ngIf="PODialog"

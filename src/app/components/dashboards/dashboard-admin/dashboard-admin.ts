@@ -167,9 +167,9 @@ import { TableModule } from 'primeng/table';
           <div class="flex space-x-8 p-4">
             <div class="text-center flex-1 border-r border-gray-300">
               <div class="text-4xl font-semibold tracking-widest text-gray-600">
-                {{ dashboardCount?.summary?.jobs?.active }}
+                {{ dashboardCount?.summary?.jobs?.wip }}
               </div>
-              <div class="text-sm text-gray-400">Active Jobs</div>
+              <div class="text-sm text-gray-400">WIP</div>
             </div>
             <div class="text-center flex-1">
               <div
@@ -181,9 +181,9 @@ import { TableModule } from 'primeng/table';
             </div>
             <div class="text-center flex-1 border-l border-gray-300">
               <div class="text-4xl font-semibold tracking-widest text-red-400">
-                {{ dashboardCount?.summary?.jobs?.delayed }}
+                {{ dashboardCount?.summary?.jobs?.onHold }}
               </div>
-              <div class="text-sm text-gray-400">Delayed</div>
+              <div class="text-sm text-gray-400">On Hold</div>
             </div>
           </div>
           <div class="p-4">
@@ -223,20 +223,14 @@ import { TableModule } from 'primeng/table';
           </h3>
           <div class="flex justify-center p-4 gap-2">
             <div class="p-2 flex-1 bg-white shadow-md rounded-md">
-              <div class="flex flex-row items-center border justify-between">
-                <div
-                  class="text-4xl font-semibold tracking-widest text-yellow-500 text-shadow-md"
-                >
-                  {{ dashboardCount?.summary?.roleRequests?.pending }}
-                </div>
-                <div class="flex flex-col justify-between">
-                  <i class="pi pi-hourglass"></i>
-                  <div
-                    class="text-right text-xs tracking-wider pt-1 text-gray-400"
-                  >
-                    Pending
-                  </div>
-                </div>
+              <div
+                class="text-4xl font-semibold tracking-widest text-yellow-500 text-shadow-md"
+              >
+                {{ dashboardCount?.summary?.roleRequests?.pending }}
+              </div>
+
+              <div class="text-right text-xs tracking-wider pt-1 text-gray-400">
+                Pending
               </div>
             </div>
             <div class="p-2 flex-1 bg-white shadow-md rounded-md">
@@ -294,8 +288,13 @@ import { TableModule } from 'primeng/table';
                 </tr>
               </ng-template>
               <ng-template #emptymessage>
-                <tr colspan="100%">
-                  <td>No requested role</td>
+                <tr>
+                  <td
+                    colspan="100%"
+                    class="!text-center !text-xs !text-gray-500 !tracking-wider"
+                  >
+                    No requested role
+                  </td>
                 </tr>
               </ng-template>
             </p-table>

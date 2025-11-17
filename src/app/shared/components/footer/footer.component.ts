@@ -91,7 +91,7 @@ export class FooterComponent {
     {
       label: 'WO',
       icon: 'pi-file',
-      link: '/settings',
+      link: '/work-order',
       roles: ['Admin', 'Approver', 'Planner'],
     },
     {

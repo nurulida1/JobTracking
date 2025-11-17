@@ -51,7 +51,7 @@ import { UserService } from '../../../services/userService.service';
       class="relative w-full bg-cover bg-center flex items-center justify-center bg-white/60"
     >
       <div class="relative w-full min-h-[98vh] md:min-h-[91.8vh] flex flex-col">
-        <div class="w-full pt-14 md:pt-0">
+        <div class="w-full pt-14 md:pt-0 pb-10 md:pb-0">
           <div class="p-4 flex flex-col">
             <h3
               class="text-xl font-semibold mb-3 text-gray-600 text-shadow-md text-shadow-black/10 tracking-wider"

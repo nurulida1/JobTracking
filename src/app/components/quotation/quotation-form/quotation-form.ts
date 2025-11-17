@@ -50,7 +50,7 @@ import { environment } from '../../../../environments/environment.development';
       <div
         class="text-lg font-semibold tracking-widest mb-2 text-shadow-lg"
       ></div>
-      <div class="w-full">
+      <div class="w-full pb-10 md:pb-0">
         <div class="h-[90%] pb-20 pt-12 md:pt-0 md:pb-0">
           <div class="p-4 flex flex-col">
             <h3 class="text-lg font-semibold mb-3 text-blue-400 tracking-wider">

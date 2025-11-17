@@ -1,12 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { retry, tap, catchError, throwError } from 'rxjs';
+import { retry, tap, catchError, throwError, Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 import { UserService } from './userService.service';
+import { LoginResponse } from '../models/UserModel';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  url = environment.ApiBaseUrl + '/Auth';
+
   constructor(
     private http: HttpClient,
     private messageService: MessageService,
@@ -15,7 +18,7 @@ export class AuthService {
 
   login(username: string, password: string) {
     return this.http
-      .post<any>(`${environment.ApiBaseUrl}/auth/login`, { username, password })
+      .post<any>(`${this.url}/login`, { username, password })
       .pipe(
         retry(1),
         tap((res) => {
@@ -26,6 +29,13 @@ export class AuthService {
         }),
         catchError(this.handleError('Login'))
       );
+  }
+
+  authenticate(username: string, password: string): Observable<LoginResponse> {
+    const request = { username, password };
+    return this.http
+      .post<LoginResponse>(`${this.url}/authenticate`, request)
+      .pipe(retry(1), catchError(this.handleError('authenticate')));
   }
 
   private handleError = (context: string) => (error: any) => {
